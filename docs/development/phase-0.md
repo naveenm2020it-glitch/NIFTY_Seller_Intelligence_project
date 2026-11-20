@@ -32,14 +32,22 @@ Scope: establish the new repository and a reproducible application foundation. T
 | Security and secrets | Complete for foundation | `.env` ignored, placeholder-only example, runtime secret variables, no credentials in tests |
 | Automated tests | Complete | Pytest backend tests and CI |
 | Frontend build | Complete | React/Vite production build in CI |
-| Render preparation | Complete, not deployed | `render.yaml`; auto-deploy disabled; no services created |
+| Render preparation | Complete, not deployed | `render.yaml`; API free plan, auto-deploy disabled; no services created |
 | Documentation | Complete | README, architecture, API, database, storage, setup and validation docs |
 
-## Validation evidence
+## Final remote validation evidence
 
-The previous CI run on commit `141b497f7347f9211fa24ecfdc5ac51c247135d0` passed both backend and frontend jobs. The Phase 0 completion changes must pass CI again before this checklist is treated as verified for the current commit.
+<badge color="success">CI passed</badge>
 
-The workflow provisions a temporary PostgreSQL 16 service, applies Alembic migrations, runs backend tests and builds the frontend. CI does not provide persistent hosting or a permanent database.
+The latest Phase 0 Foundation CI run completed successfully for commit `a1b19e455b7586c573e7bf232eb6ab69d49aae5d`:
+
+- [GitHub Actions run 44698862431](`https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/44698862431`)
+- Backend checks: success — Python dependencies installed, PostgreSQL 16 started, Alembic migration applied and all backend tests passed.
+- Frontend build: success — Node.js dependencies installed and Vite production build passed.
+
+The backend tests cover the API health checks, PostgreSQL connectivity, B2 configuration and mocked object-storage operations, plus Pandas/NumPy and Scikit-learn smoke tests.
+
+The workflow provisions a temporary PostgreSQL 16 service. It is destroyed when the workflow ends. CI does not provide persistent hosting or a permanent database.
 
 ## Explicit Phase 0 exclusions
 
@@ -56,6 +64,8 @@ These belong to later phases and must be designed against the approved requireme
 
 A real Backblaze B2 bucket and bucket-restricted application key must be created and configured by the owner in a trusted runtime before live storage connectivity can be confirmed. The repository contains no credentials, does not create a bucket and does not provision paid services. See [storage setup](../storage/README.md).
 
-## Phase 0 exit criteria
+## Phase 0 exit decision
 
-Phase 0 implementation is ready for final remote validation. Mark the phase closed only after the current commit's GitHub Actions run succeeds. A live B2 connection is an external credential-dependent activation, not something CI can verify with mock credentials. Phase 1 can then begin with the historical EOD data audit and approved data-model design.
+**Phase 0 foundation implementation is complete and remotely validated.** The original seven-step foundation plan is complete in the repository. The only remaining external activation is configuring owner-managed B2 credentials and confirming access to the real bucket; this is not a blocker for closing the repository foundation. Phase 1 can begin with the historical EOD data audit and approved data-model design.
+
+No merge to `main` and no production deployment has been performed.
