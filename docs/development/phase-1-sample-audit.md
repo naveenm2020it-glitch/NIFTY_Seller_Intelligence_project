@@ -58,12 +58,19 @@ Using 19-Nov-2026 as the anchor date from the uploaded sample, the 22-session wi
 
 The 08-Nov-2026 Sunday Muhurat session must be checked for actual FO Bhavcopy availability rather than silently excluded as a weekend. The 10-Nov-2026 exchange holiday is excluded. The list is based on the published 2026 exchange holiday calendar and must be reconciled with actual report availability.
 
+## Analysis input decisions
+
+- User inputs are **Analysis Date** and **Expiry** only. The cutoff-time feature/input is removed; do not reintroduce it in the UI, API, schema or analysis pipeline.
+- Analysis uses the complete available EOD report for the selected trading session. Do not infer intraday states or arbitrary cutoff snapshots from EOD data.
+- Load the expiry choices from the historical NSE FO MII contract master for the selected analysis date. Keep expiry user-selectable.
+- Skip exchange holidays and non-trading days. A special session such as 08-Nov-2026 Muhurat is included only if the official F&O reports for that session exist and pass validation.
+
 ## Still open
 
-1. Obtain the remaining 21 sessions of F&O Bhavcopy and matching daily MII contract master for the provisional window above.
-2. Obtain matching 22-session NIFTY 50 historical index OHLC.
-3. Re-run the documented epoch and strike checks across all 22 sessions; quarantine mismatches.
-4. Resolve the UI cutoff-time semantics: EOD-only reports cannot reconstruct arbitrary intraday snapshots. Either cutoff must be an EOD-compatible reporting boundary, or the data scope needs an approved intraday source.
+1. Obtain the remaining candidate sessions' F&O Bhavcopy and matching daily MII contract master, using a permitted acquisition method.
+2. Obtain matching NIFTY 50 historical index OHLC for the verified trading sessions.
+3. Re-run the epoch, strike, option-type, duplicate-ID and coverage checks across every obtained session; quarantine mismatches.
+4. Reconcile the candidate session list against actual exchange trading sessions and actual report availability. Do not count a date merely because it appears in the candidate list.
 5. `main` and `phase-0-foundation` remain diverged. Phase 1 is isolated on `phase-1-data-audit`; do not merge or reset the foundation branches until their CI-only difference is reviewed.
 
 ## Reproducibility
