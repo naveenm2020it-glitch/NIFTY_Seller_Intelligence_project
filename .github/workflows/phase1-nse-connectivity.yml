@@ -30,10 +30,12 @@ jobs:
         run: python tools/probe_niftyindices_api.py
       - name: Probe official NIFTY 50 historical JSON asset
         run: python tools/probe_niftyindices_static_json.py
+      - name: Download official NSE Phase 1 F&O reports
+        run: python tools/download_phase1_fo_reports.py
       - name: Upload diagnostic report
         uses: actions/upload-artifact@v4
         with:
-          name: nse-connectivity-report
+          name: phase1-nse-fo-download-and-diagnostics
           path: artifacts/
           if-no-files-found: error
           retention-days: 14
