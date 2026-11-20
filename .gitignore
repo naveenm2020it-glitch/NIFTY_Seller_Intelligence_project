@@ -1,0 +1,49 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Node
+node_modules/
+frontend/dist/
+npm-debug.log*
+yarn-debug.log*
+
+# Local databases and data
+*.sqlite
+*.sqlite3
+*.db
+storage/*
+!storage/.gitkeep
+data/
+historical_data/
+raw_data/
+processed_data/
+
+# Model artifacts
+*.pkl
+*.joblib
+*.onnx
+model_artifacts/
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
