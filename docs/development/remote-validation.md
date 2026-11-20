@@ -38,5 +38,5 @@ Open the repository's **Actions** tab, select **Phase 0 Foundation CI**, and ins
 ## Development and deployment choices
 - **Repository edits and automated checks:** can continue through GitHub without a local laptop.
 - **Optional local development:** see [setup.md](setup.md).
-- **Render:** an optional Blueprint is checked in with automatic deploy disabled. No services have been created.
+- **Render:** an optional Blueprint is checked in. The API is configured for the free compute plan, static hosting does not use a compute plan, and automatic deploy is disabled. No services have been created.
 - **Interactive cloud workspace or persistent hosting:** not configured. Evaluate separately before enabling; availability, included usage and cost depend on the provider and account plan.

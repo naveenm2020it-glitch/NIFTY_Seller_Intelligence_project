@@ -33,7 +33,7 @@ The backend is one deployable application. Its modules have distinct responsibil
 - Approved production patterns are not replaced without validation and approval.
 
 ## Deployment boundary
-A Render Blueprint is checked in as an optional deployment definition. Both services have automatic deploy disabled and use the free plan declaration. No Render service, persistent database or production environment has been created. Actual availability and provider pricing must be checked before any deployment.
+A Render Blueprint is checked in as an optional deployment definition. The API service declares the free compute plan, automatic deploy is disabled, and the static frontend has no compute plan. No Render service, persistent database or production environment has been created. Actual availability and provider pricing must be checked before any deployment.
 
 ## Deferred decisions
 Persistent cloud database provisioning, background job infrastructure, production authentication, data-ingestion scheduling and actual B2 bucket activation are deferred until their requirements and credentials are available.
