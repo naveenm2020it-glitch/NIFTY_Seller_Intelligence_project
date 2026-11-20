@@ -48,13 +48,23 @@ Official specification: https://nsearchives.nseindia.com/web/sites/default/files
 - Preserve original source files and record report date, source, download timestamp, byte size and SHA-256.
 - Do not automate NSE website collection until the permitted acquisition method is confirmed.
 
+## Provisional 22-session audit window
+
+Using 19-Nov-2026 as the anchor date from the uploaded sample, the 22-session window is provisionally:
+
+- 21-Oct-2026, 22-Oct-2026, 23-Oct-2026, 26-Oct-2026, 27-Oct-2026, 28-Oct-2026, 29-Oct-2026, 30-Oct-2026
+- 02-Nov-2026, 03-Nov-2026, 04-Nov-2026, 05-Nov-2026, 06-Nov-2026, 08-Nov-2026 (special Muhurat session), 09-Nov-2026, 11-Nov-2026
+- 12-Nov-2026, 13-Nov-2026, 16-Nov-2026, 17-Nov-2026, 18-Nov-2026, 19-Nov-2026
+
+The 08-Nov-2026 Sunday Muhurat session must be checked for actual FO Bhavcopy availability rather than silently excluded as a weekend. The 10-Nov-2026 exchange holiday is excluded. The list is based on the published 2026 exchange holiday calendar and must be reconciled with actual report availability.
+
 ## Still open
 
-1. Obtain the remaining 21 sessions of F&O Bhavcopy and matching daily MII contract master for the approved 22-session window.
+1. Obtain the remaining 21 sessions of F&O Bhavcopy and matching daily MII contract master for the provisional window above.
 2. Obtain matching 22-session NIFTY 50 historical index OHLC.
 3. Re-run the documented epoch and strike checks across all 22 sessions; quarantine mismatches.
 4. Resolve the UI cutoff-time semantics: EOD-only reports cannot reconstruct arbitrary intraday snapshots. Either cutoff must be an EOD-compatible reporting boundary, or the data scope needs an approved intraday source.
-5. Reconcile `main` and `phase-0-foundation` before merging Phase 1. They are diverged; the only main-side file difference identified is `.github/workflows/ci.yml`. Do not reset or blindly merge either branch.
+5. `main` and `phase-0-foundation` remain diverged. Phase 1 is isolated on `phase-1-data-audit`; do not merge or reset the foundation branches until their CI-only difference is reviewed.
 
 ## Reproducibility
 
