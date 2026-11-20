@@ -16,12 +16,13 @@ The backend is one deployable application. Its modules have distinct responsibil
 - `ml`: four separately versioned ML models.
 - `reports`: generated analysis reports and export.
 - `feedback_learning`: feedback records, pattern history, candidate optimization and validation lifecycle.
+- `storage`: Backblaze B2 object-storage adapter using the S3-compatible API.
 
 ## Data boundaries
 1. Preserve original report files unchanged.
 2. Validate source files before processing.
 3. Store structured records and analysis metadata in PostgreSQL.
-4. Store local raw/processed files outside version control.
+4. Store raw source archives in a configured B2 bucket when storage is enabled; keep local working files outside version control.
 5. Record analysis inputs, cutoff, expiry, source provenance and software/model versions for reproducibility.
 
 ## Operating constraints
@@ -31,5 +32,8 @@ The backend is one deployable application. Its modules have distinct responsibil
 - NSE acquisition methods must comply with applicable source terms.
 - Approved production patterns are not replaced without validation and approval.
 
+## Deployment boundary
+A Render Blueprint is checked in as an optional deployment definition. Both services have automatic deploy disabled and use the free plan declaration. No Render service, persistent database or production environment has been created. Actual availability and provider pricing must be checked before any deployment.
+
 ## Deferred decisions
-Cloud hosting, cloud object storage, background job infrastructure, deployment automation and production authentication details are deferred until a demonstrated need exists.
+Persistent cloud database provisioning, background job infrastructure, production authentication, data-ingestion scheduling and actual B2 bucket activation are deferred until their requirements and credentials are available.

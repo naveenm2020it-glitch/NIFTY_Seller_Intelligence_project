@@ -1,6 +1,6 @@
 # Development Setup
 
-This guide documents an optional local developer setup. **A local laptop is not required for the project's current repository-based workflow:** GitHub Actions installs dependencies on a clean runner, provisions temporary PostgreSQL, applies migrations, runs backend tests and builds the frontend.
+This guide documents an optional local developer setup. A local laptop is not required for the project's repository-based workflow: GitHub Actions installs dependencies on a clean runner, provisions temporary PostgreSQL, applies migrations, runs backend tests and builds the frontend.
 
 ## Requirements
 
@@ -9,15 +9,17 @@ This guide documents an optional local developer setup. **A local laptop is not 
 - PostgreSQL 16 (or a compatible supported PostgreSQL version)
 - Git
 
-No paid service is required for this local setup. PostgreSQL can be installed locally or run in an environment you control.
+No paid service is required for local development. PostgreSQL can be installed locally or run in an environment you control. Backblaze B2 is optional until object storage is activated; usage may incur provider charges.
 
 ## Repository configuration
 
-1. Clone the repository and check out the working branch.
-2. Copy `.env.example` to `.env` for reference, then replace placeholders with local values.
-3. Keep `.env` untracked. Never commit credentials or historical market data.
+1. Clone the repository and check out `phase-0-foundation`.
+2. Copy `.env.example` to `.env` at the repository root.
+3. Replace the PostgreSQL placeholders with a local database URL.
+4. Configure B2 values only after creating a bucket and a bucket-restricted application key.
+5. Keep `.env` untracked. Never commit credentials or historical market data.
 
-The current FastAPI configuration reads `DATABASE_URL` from the process environment. Automatic `.env` loading is not configured, so export `DATABASE_URL` in the shell or set it in the environment used to start the backend. `DATA_STORAGE_PATH` is reserved configuration guidance at this stage; data-ingestion code does not yet consume it.
+The backend loads the repository-root `.env` file automatically when configuration is imported. Existing process environment variables take precedence, which allows CI and deployment platforms to supply their own values.
 
 ## Backend
 
@@ -28,18 +30,20 @@ python3.12 -m venv backend/.venv
 source backend/.venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r backend/requirements.txt
-export DATABASE_URL='postgresql+psycopg://USER:PASSWORD@localhost:5432/nifty_seller_intelligence'
 cd backend
 alembic upgrade head
 python -m pytest -q
 uvicorn app.main:app --reload
 ```
 
-Replace the database URL placeholders with the credentials and database name configured in your PostgreSQL instance. The database must exist and be reachable before applying migrations.
+The PostgreSQL database must exist and be reachable before applying migrations.
 
 Health endpoints:
 - `http://127.0.0.1:8000/health`
 - `http://127.0.0.1:8000/health/database`
+- `http://127.0.0.1:8000/health/storage`
+
+The storage health endpoint returns HTTP 503 until valid B2 settings and a reachable bucket are configured.
 
 ## Frontend
 
@@ -61,6 +65,8 @@ Push changes to `phase-0-foundation` or open a pull request targeting that branc
 ## Current limitations
 
 - The Alembic baseline is intentionally empty; domain-specific tables have not been designed.
+- B2 integration code and mocked tests are present, but a real bucket connection requires owner-managed credentials.
 - No NSE data downloader, analytical engine, scenario engine or trained model is included.
 - GitHub Actions databases and runners are temporary. CI is validation, not hosting.
+- Render configuration is prepared but no service or deployment has been created.
 - No persistent cloud development workspace or production deployment is configured.
