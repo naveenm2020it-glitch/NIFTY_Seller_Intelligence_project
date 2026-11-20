@@ -9,14 +9,14 @@ This guide documents an optional local developer setup. A local laptop is not re
 - PostgreSQL 16 (or a compatible supported PostgreSQL version)
 - Git
 
-No paid service is required for local development. PostgreSQL can be installed locally or run in an environment you control. Backblaze B2 is optional until object storage is activated; usage may incur provider charges.
+No paid service is required for local development. PostgreSQL can be installed locally or run in an environment you control. Backblaze B2 is configured for CI connectivity verification; local object-storage use still requires the appropriate local environment variables. Usage may incur provider charges.
 
 ## Repository configuration
 
 1. Clone the repository and check out `phase-0-foundation`.
 2. Copy `.env.example` to `.env` at the repository root.
 3. Replace the PostgreSQL placeholders with a local database URL.
-4. Configure B2 values only after creating a bucket and a bucket-restricted application key.
+4. For local B2 use, configure the five B2 values for the existing bucket and its bucket-restricted application key.
 5. Keep `.env` untracked. Never commit credentials or historical market data.
 
 The backend loads the repository-root `.env` file automatically when configuration is imported. Existing process environment variables take precedence, which allows CI and deployment platforms to supply their own values.
@@ -43,7 +43,7 @@ Health endpoints:
 - `http://127.0.0.1:8000/health/database`
 - `http://127.0.0.1:8000/health/storage`
 
-The storage health endpoint returns HTTP 503 until valid B2 settings and a reachable bucket are configured.
+The storage health endpoint returns HTTP 503 until valid B2 settings and a reachable bucket are configured in the environment running the application.
 
 ## Frontend
 
@@ -65,7 +65,7 @@ Push changes to `phase-0-foundation` or open a pull request targeting that branc
 ## Current limitations
 
 - The Alembic baseline is intentionally empty; domain-specific tables have not been designed.
-- B2 integration code and mocked tests are present, but a real bucket connection requires owner-managed credentials.
+- Live B2 bucket reachability has been verified by CI using `HeadBucket`; live upload, download and delete operations have not been validated against the real bucket.
 - No NSE data downloader, analytical engine, scenario engine or trained model is included.
 - GitHub Actions databases and runners are temporary. CI is validation, not hosting.
 - Render configuration is prepared but no service or deployment has been created.
