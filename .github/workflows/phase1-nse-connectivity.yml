@@ -30,6 +30,8 @@ jobs:
         run: python tools/probe_niftyindices_api.py
       - name: Probe official NIFTY 50 historical JSON asset
         run: python tools/probe_niftyindices_static_json.py
+      - name: Probe official NSE India historical index API
+        run: python tools/probe_nse_indices_history_api.py
       - name: Download official NSE Phase 1 F&O reports
         run: python tools/download_phase1_fo_reports.py
       - name: Upload diagnostic report
