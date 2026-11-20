@@ -1,6 +1,6 @@
 # Phase 0 — New Repository & Complete Foundation Setup
 
-<badge>COMPLETED</badge> **Phase 0 status: Completed — 20 November 2026.** The technical foundation, remote CI validation, live B2 bucket reachability check and Phase 0 documentation are complete. The remaining `main` branch protection setting is a recommended repository safeguard, not a Phase 0 technical exit blocker.
+**STATUS: COMPLETED — 20 November 2026.** The technical foundation, remote CI validation, live B2 bucket reachability check and Phase 0 documentation are complete. The remaining `main` branch protection setting is a recommended repository safeguard, not a Phase 0 technical exit blocker.
 
 Scope: establish the new repository and a reproducible application foundation. This phase does not implement NIFTY analysis, NSE data acquisition or trading intelligence.
 
