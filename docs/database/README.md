@@ -10,7 +10,7 @@ Set `DATABASE_URL` in the runtime environment. The value must use the SQLAlchemy
 postgresql+psycopg://USER:PASSWORD@HOST:5432/DATABASE
 ```
 
-Do not commit real credentials. Keep local values in an untracked `.env` file or configure secrets in the deployment environment.
+For local development, put the real value in an untracked `.env` file and never commit credentials. The current application configuration reads `DATABASE_URL` from the process environment; loading `.env` automatically is not currently configured. Export the variable in the shell or configure it in the execution environment.
 
 ## Migrations
 
