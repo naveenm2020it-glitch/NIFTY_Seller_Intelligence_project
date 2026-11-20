@@ -1,6 +1,9 @@
 name: Phase 1 - Official NSE connectivity probe
 
 on:
+  push:
+    branches:
+      - phase1-nse-data-acquisition-env
   workflow_dispatch:
 
 permissions:
