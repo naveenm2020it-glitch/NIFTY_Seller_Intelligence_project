@@ -43,4 +43,6 @@ Do not paste application keys into chat or commit them to GitHub. Enter them dir
 
 Automated tests use a mocked S3-compatible client. They verify configuration handling, endpoint selection, bucket selection, and the upload/download/delete calls without requiring real credentials or creating billable resources.
 
-A live connection is verified only when a workflow run reports that the optional Backblaze B2 connectivity step succeeded against the real bucket. Raw NSE report collection, retention policy, and ingestion workflows are intentionally outside Phase 0.
+**Live connectivity status: verified.** GitHub Actions run [#15 — Phase 0 Foundation CI](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/44709767148) completed successfully on 20 November 2026, including the workflow step **Verify live Backblaze B2 connectivity when credentials are configured**. That step verifies bucket reachability with `HeadBucket`; it does not verify file upload/download/delete behavior against the live bucket.
+
+Raw NSE report collection, retention policy, and ingestion workflows are intentionally outside Phase 0.
