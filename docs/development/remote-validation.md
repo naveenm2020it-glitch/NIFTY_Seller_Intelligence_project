@@ -15,7 +15,7 @@ The project uses GitHub-hosted Actions runners to install dependencies and execu
 ## What this does not provide
 - A persistent server that stays online.
 - A permanent PostgreSQL database or retained application data.
-- A live Backblaze B2 bucket connection unless the optional secrets-backed check is configured and succeeds; default tests mock the S3-compatible API.
+- Live validation of B2 file upload, download or delete operations. The CI run verifies bucket reachability only; the default storage operation tests use a mocked S3-compatible API.
 - A browser-based interactive development workspace.
 - A production deployment or public application URL.
 - A guarantee of free GitHub Actions usage beyond the account's applicable limits.
@@ -34,11 +34,14 @@ The workflow runs on pushes to `phase-0-foundation` and `main`, pull requests ta
 6. If all five B2 repository secrets are present, run a read-only `HeadBucket` check against the configured bucket. If none are present, report the live check as skipped; partial configuration fails.
 7. Install Node.js 22 dependencies and run the frontend production build.
 
-## Enable live B2 verification
-In the repository, open **Settings → Secrets and variables → Actions** and add these repository secrets: `B2_ENDPOINT_URL`, `B2_REGION`, `B2_BUCKET_NAME`, `B2_APPLICATION_KEY_ID` and `B2_APPLICATION_KEY`. Use a bucket-restricted key and do not paste credentials into chat, issues, commits or workflow logs. The check only verifies bucket access; it does not modify bucket contents. See [storage setup](../storage/README.md).
+## Live B2 connectivity verification
+
+Live bucket reachability is verified. GitHub Actions run [#15 — Phase 0 Foundation CI](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/44709767148) completed successfully on 20 November 2026. Its **Backend checks**, **Frontend build** and **Verify live Backblaze B2 connectivity when credentials are configured** steps all succeeded. The B2 step used `HeadBucket`, which confirms access to the configured bucket without changing its contents.
+
+The workflow reads these repository Actions secrets: `B2_ENDPOINT_URL`, `B2_REGION`, `B2_BUCKET_NAME`, `B2_APPLICATION_KEY_ID` and `B2_APPLICATION_KEY`. Use a bucket-restricted key and do not paste credentials into chat, issues, commits or workflow logs. The check does not validate live file upload, download or delete operations. See [storage setup](../storage/README.md).
 
 ## How to inspect a validation run
-Open the repository's **Actions** tab, select **Phase 0 Foundation CI**, and inspect both the **Backend checks** and **Frontend build** jobs. In the backend job, inspect the optional live B2 step: success means the real bucket responded; skipped means credentials have not been configured.
+Open the repository's **Actions** tab, select **Phase 0 Foundation CI**, and inspect both the **Backend checks** and **Frontend build** jobs. In the backend job, inspect the optional live B2 step: success means the real bucket responded; skipped means credentials were not configured for that run.
 
 ## Development and deployment choices
 - **Repository edits and automated checks:** can continue through GitHub without a local laptop.
