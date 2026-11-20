@@ -1,0 +1,84 @@
+# Phase 1 — NSE sample data audit (19-Nov-2026)
+
+**Audit run:** 20-Nov-2026  
+**Scope:** One complete F&O UDiFF Bhavcopy and same-day legacy FO MII contract-master sample. This is not the full 22-session audit.
+
+## Source files
+
+- `BhavCopy_NSE_FO_0_0_0_20261119_F_0000.csv.zip`
+- `NSE_FO_contract_19112026.csv.gz`
+- `NSE_FO_spdcontract_19112026.csv.gz` is the spread-contract file, not the standard contract master.
+- `OPTIDX_NIFTY_CE_08-Jan-2026_TO_23-Jan-2026.csv` is a narrow CE/one-strike sample and does not establish full CE/PE coverage.
+
+## Verified sample results
+
+| Check | Result |
+|---|---:|
+| Total Bhavcopy rows | 44,543 |
+| NIFTY CE/PE Bhavcopy rows | 2,106 |
+| CE / PE rows | 1,045 / 1,061 |
+| Distinct expiries | 18 |
+| Bhavcopy distinct IDs / duplicate ID rows | 2,106 / 0 |
+| Zero-volume option rows | 613 |
+| MII NIFTY CE/PE rows | 4,315 |
+| MII CE / PE rows | 2,150 / 2,165 |
+| MII distinct IDs / duplicate ID rows | 4,315 / 0 |
+| Matched IDs | 2,106 |
+| Expiry matches | 2,106 / 2,106 |
+| Strike matches | 2,106 / 2,106 |
+| Option-type matches | 2,106 / 2,106 |
+
+## Resolved parser issues
+
+### 1. Expiry epoch
+
+The initial audit incorrectly interpreted MII `XpryDt` as Unix seconds from 1970. NSE Data & Analytics Master Data Specification v1.5 (01-Jul-2024) says time fields are seconds from midnight 01-Jan-1980 unless otherwise specified; the F&O contract-master expiry field is explicitly seconds elapsed from 01-Jan-1980. Applying that epoch makes all 2,106 matched option expiry dates agree with the Bhavcopy. Example: `1483021800` becomes `2026-12-29 14:30:00`, whose date matches `2026-12-29`.
+
+### 2. Strike scaling
+
+NSE's same master specification says FO price fields are in paise and must be divided by 100 to obtain rupees. The observed MII `StrkPric / 100` therefore matches the Bhavcopy for all 2,106 matched option IDs. Keep raw and normalized values separately. Apply this only to the legacy MII FO format, not blindly to UDiFF or other report formats.
+
+Official specification: https://nsearchives.nseindia.com/web/sites/default/files/inline-files/NSE_MasterData_Technical_Specifications.pdf
+
+## Data handling decisions
+
+- Preserve zero-volume rows; zero traded volume is not missing data.
+- Keep daily MII contract-master snapshots separate from Bhavcopy observations. The MII sample has 4,315 option rows while the Bhavcopy has 2,106.
+- Use `FinInstrmId` as a candidate cross-file key and validate expiry, symbol, option type and normalized strike.
+- Preserve original source files and record report date, source, download timestamp, byte size and SHA-256.
+- Do not automate NSE website collection until the permitted acquisition method is confirmed.
+
+## Provisional 22-session audit window
+
+Using 19-Nov-2026 as the anchor date from the uploaded sample, the 22-session window is provisionally:
+
+- 21-Oct-2026, 22-Oct-2026, 23-Oct-2026, 26-Oct-2026, 27-Oct-2026, 28-Oct-2026, 29-Oct-2026, 30-Oct-2026
+- 02-Nov-2026, 03-Nov-2026, 04-Nov-2026, 05-Nov-2026, 06-Nov-2026, 08-Nov-2026 (special Muhurat session), 09-Nov-2026, 11-Nov-2026
+- 12-Nov-2026, 13-Nov-2026, 16-Nov-2026, 17-Nov-2026, 18-Nov-2026, 19-Nov-2026
+
+The 08-Nov-2026 Sunday Muhurat session must be checked for actual FO Bhavcopy availability rather than silently excluded as a weekend. The 10-Nov-2026 exchange holiday is excluded. The list is based on the published 2026 exchange holiday calendar and must be reconciled with actual report availability.
+
+## Analysis input decisions
+
+- User inputs are **Analysis Date** and **Expiry** only. The cutoff-time feature/input is removed; do not reintroduce it in the UI, API, schema or analysis pipeline.
+- Analysis uses the complete available EOD report for the selected trading session. Do not infer intraday states or arbitrary cutoff snapshots from EOD data.
+- Load the expiry choices from the historical NSE FO MII contract master for the selected analysis date. Keep expiry user-selectable.
+- Skip exchange holidays and non-trading days. A special session such as 08-Nov-2026 Muhurat is included only if the official F&O reports for that session exist and pass validation.
+
+## Still open
+
+1. Obtain the remaining candidate sessions' F&O Bhavcopy and matching daily MII contract master, using a permitted acquisition method.
+2. Obtain matching NIFTY 50 historical index OHLC for the verified trading sessions.
+3. Re-run the epoch, strike, option-type, duplicate-ID and coverage checks across every obtained session; quarantine mismatches.
+4. Reconcile the candidate session list against actual exchange trading sessions and actual report availability. Do not count a date merely because it appears in the candidate list.
+5. `main` and `phase-0-foundation` remain diverged. Phase 1 is isolated on `phase-1-data-audit`; do not merge or reset the foundation branches until their CI-only difference is reviewed.
+
+## Reproducibility
+
+Run the read-only audit utility:
+
+```bash
+python scripts/data/phase1_sample_audit.py --bhavcopy /path/to/BhavCopy_NSE_FO_0_0_0_YYYYMMDD_F_0000.csv.zip --contract-master /path/to/NSE_FO_contract_ddmmyyyy.csv.gz
+```
+
+No market-data archives are included in this repository.
