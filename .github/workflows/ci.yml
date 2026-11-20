@@ -1,0 +1,84 @@
+name: Phase 0 Foundation CI
+
+on:
+  push:
+    branches:
+      - phase-0-foundation
+  pull_request:
+    branches:
+      - main
+      - phase-0-foundation
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend checks
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nifty_seller_intelligence
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d nifty_seller_intelligence"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/nifty_seller_intelligence
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install backend dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Apply database migrations
+        run: alembic upgrade head
+      - name: Run backend tests
+        run: python -m pytest -q
+      - name: Verify live Backblaze B2 connectivity when credentials are configured
+        env:
+          B2_ENDPOINT_URL: ${{ secrets.B2_ENDPOINT_URL }}
+          B2_REGION: ${{ secrets.B2_REGION }}
+          B2_BUCKET_NAME: ${{ secrets.B2_BUCKET_NAME }}
+          B2_APPLICATION_KEY_ID: ${{ secrets.B2_APPLICATION_KEY_ID }}
+          B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+        run: |
+          if [ -z "${B2_ENDPOINT_URL}${B2_REGION}${B2_BUCKET_NAME}${B2_APPLICATION_KEY_ID}${B2_APPLICATION_KEY}" ]; then
+            echo "::notice::Live B2 verification skipped; configure all five B2 repository secrets to enable it."
+            exit 0
+          fi
+          python -c "from app.storage.b2 import check_b2_connection; check_b2_connection(); print('Backblaze B2 bucket connectivity verified.')"
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install frontend dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build frontend
+        run: npm run build
