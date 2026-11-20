@@ -26,6 +26,8 @@ jobs:
         run: python tools/nse_connectivity_probe.py
       - name: Inspect official NSE Indices historical-data UI
         run: python tools/inspect_niftyindices_page.py
+      - name: Probe official NIFTY 50 historical OHLC endpoint
+        run: python tools/probe_niftyindices_api.py
       - name: Upload diagnostic report
         uses: actions/upload-artifact@v4
         with:
