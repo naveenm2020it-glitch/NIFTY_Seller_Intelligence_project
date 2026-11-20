@@ -156,7 +156,6 @@ def main():
     df = pd.DataFrame(rows)
     df.to_csv(OUT / "phase1-fo-datewise-audit.csv", index=False)
     checks = {
-        "sessions": len(df),
         "all_bhavcopy_and_mii_files_present": len(df) == 22,
         "all_trad_dates_match": bool(df["trad_date_match"].all()),
         "all_biz_dates_match": bool(df["biz_date_match"].all()),
@@ -176,6 +175,7 @@ def main():
         "zero_volume_rows_preserved": True,
     }
     summary = {
+        "sessions": len(df),
         "scope": "22 candidate sessions ending 2026-11-19; Muhurat 2026-11-08 included because both official F&O reports were downloaded",
         "fallback_2026-10-19": "downloaded as contingency only; excluded from selected 22-session set",
         "totals": {k: int(df[k].sum()) for k in [
@@ -184,8 +184,8 @@ def main():
             "unmatched_contract_ids","expiry_matches","strike_matches","option_type_matches"
         ]},
         "checks": checks,
-        "passed_checks": sum(checks.values()),
-        "total_checks": len(checks),
+        "passed_checks": sum(value is True for value in checks.values()),
+        "total_checks": sum(isinstance(value, bool) for value in checks.values()),
     }
     (OUT / "phase1-fo-audit-summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print(json.dumps(summary, indent=2))
