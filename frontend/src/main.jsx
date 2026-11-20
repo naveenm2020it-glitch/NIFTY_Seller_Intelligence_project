@@ -1,11 +1,17 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import "./style.css";
 
 function App() {
   return (
-    <main>
+    <main className="app-shell">
+      <p className="eyebrow">Historical EOD Analysis</p>
       <h1>NIFTY Seller Intelligence</h1>
-      <p>Frontend foundation is ready for implementation.</p>
+      <p className="description">
+        The application foundation is ready. Analytical features will be added
+        in their approved development phases.
+      </p>
+      <span className="status">Foundation environment</span>
     </main>
   );
 }
