@@ -34,10 +34,12 @@ jobs:
         run: python tools/probe_nse_indices_history_api.py
       - name: Download official NSE Phase 1 F&O reports
         run: python tools/download_phase1_fo_reports.py
+      - name: Download official NSE NIFTY 50 OHLC CSVs
+        run: python tools/download_phase1_nifty50_ohlc.py
       - name: Upload diagnostic report
         uses: actions/upload-artifact@v4
         with:
-          name: phase1-nse-fo-download-and-diagnostics
+          name: phase1-nse-fo-index-download-and-diagnostics
           path: artifacts/
           if-no-files-found: error
           retention-days: 14
