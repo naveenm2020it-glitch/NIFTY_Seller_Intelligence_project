@@ -1,14 +1,16 @@
-name: Phase 0 Foundation CI
+name: NIFTY Seller Intelligence CI
 
 on:
   push:
     branches:
       - phase-0-foundation
+      - phase-1-data-audit
       - main
   pull_request:
     branches:
       - main
       - phase-0-foundation
+      - phase-1-data-audit
   workflow_dispatch:
 
 permissions:
