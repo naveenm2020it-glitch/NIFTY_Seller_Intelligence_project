@@ -52,6 +52,19 @@ jobs:
         run: alembic upgrade head
       - name: Run backend tests
         run: python -m pytest -q
+      - name: Verify live Backblaze B2 connectivity when credentials are configured
+        env:
+          B2_ENDPOINT_URL: ${{ secrets.B2_ENDPOINT_URL }}
+          B2_REGION: ${{ secrets.B2_REGION }}
+          B2_BUCKET_NAME: ${{ secrets.B2_BUCKET_NAME }}
+          B2_APPLICATION_KEY_ID: ${{ secrets.B2_APPLICATION_KEY_ID }}
+          B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+        run: |
+          if [ -z "${B2_ENDPOINT_URL}${B2_REGION}${B2_BUCKET_NAME}${B2_APPLICATION_KEY_ID}${B2_APPLICATION_KEY}" ]; then
+            echo "::notice::Live B2 verification skipped; configure all five B2 repository secrets to enable it."
+            exit 0
+          fi
+          python -c "from app.storage.b2 import check_b2_connection; check_b2_connection(); print('Backblaze B2 bucket connectivity verified.')"
 
   frontend:
     name: Frontend build
