@@ -35,17 +35,16 @@ Scope: establish the new repository and a reproducible application foundation. T
 | Render preparation | Complete, not deployed | `render.yaml`; API free plan, auto-deploy disabled; no services created |
 | Documentation | Complete | README, architecture, API, database, storage, setup and validation docs |
 
-## Final remote validation evidence
+## Remote validation evidence
 
-<badge color="success">CI passed</badge>
+The Phase 0 baseline commit `4841d9cc9c914ff875c1ec42fc6454e1b5d40662` passed both GitHub Actions checks:
 
-The latest Phase 0 Foundation CI run completed successfully for commit `a1b19e455b7586c573e7bf232eb6ab69d49aae5d`:
+- [Backend checks](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/44698990822/job/136162531901): success.
+- [Frontend build](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/44698990822/job/136162531679): success.
 
-- [GitHub Actions run 44698862431](`https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/44698862431`)
-- Backend checks: success — Python dependencies installed, PostgreSQL 16 started, Alembic migration applied and all backend tests passed.
-- Frontend build: success — Node.js dependencies installed and Vite production build passed.
+The backend job installed dependencies, started a temporary PostgreSQL 16 service, applied the Alembic baseline and ran the backend tests. The frontend job installed Node.js dependencies and completed the Vite production build.
 
-The backend tests cover the API health checks, PostgreSQL connectivity, B2 configuration and mocked object-storage operations, plus Pandas/NumPy and Scikit-learn smoke tests.
+A follow-up change adds optional live B2 connectivity verification to CI. Its result must be checked after the owner configures the five repository secrets. The latest workflow run for that change is the authoritative evidence for the new step.
 
 The workflow provisions a temporary PostgreSQL 16 service. It is destroyed when the workflow ends. CI does not provide persistent hosting or a permanent database.
 
@@ -62,10 +61,12 @@ These belong to later phases and must be designed against the approved requireme
 
 ## External activation still required
 
-A real Backblaze B2 bucket and bucket-restricted application key must be created and configured by the owner in a trusted runtime before live storage connectivity can be confirmed. The repository contains no credentials, does not create a bucket and does not provision paid services. See [storage setup](../storage/README.md).
+A real Backblaze B2 bucket and bucket-restricted application key must be created by the owner. Add the five values as repository Actions secrets: `B2_ENDPOINT_URL`, `B2_REGION`, `B2_BUCKET_NAME`, `B2_APPLICATION_KEY_ID` and `B2_APPLICATION_KEY`. Do not paste credentials into chat or commit them. The updated CI workflow performs a read-only `HeadBucket` check when all five secrets are present; it does not change bucket contents. See [storage setup](../storage/README.md).
+
+No B2 credentials have been supplied or verified in this session. Until the secrets are configured and the live check succeeds, live B2 connectivity remains pending. The repository integration foundation and mocked tests are complete; this external activation does not block starting Phase 1.
 
 ## Phase 0 exit decision
 
-**Phase 0 foundation implementation is complete and remotely validated.** The original seven-step foundation plan is complete in the repository. The only remaining external activation is configuring owner-managed B2 credentials and confirming access to the real bucket; this is not a blocker for closing the repository foundation. Phase 1 can begin with the historical EOD data audit and approved data-model design.
+**Repository foundation implementation is complete and the baseline backend/frontend CI checks passed.** The remaining Phase 0 operational item is owner-managed B2 credential configuration and live connectivity verification. Phase 1 can begin with the historical EOD data audit and approved data-model design once that boundary is acknowledged.
 
 No merge to `main` and no production deployment has been performed.
