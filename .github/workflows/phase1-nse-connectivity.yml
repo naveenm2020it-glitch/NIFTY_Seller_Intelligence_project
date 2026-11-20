@@ -34,6 +34,8 @@ jobs:
         run: python tools/probe_nse_indices_history_api.py
       - name: Download official NSE Phase 1 F&O reports
         run: python tools/download_phase1_fo_reports.py
+      - name: Probe official NSE index archive hosts
+        run: python tools/probe_nse_index_archive_hosts.py
       - name: Download official NSE NIFTY 50 OHLC CSVs
         run: python tools/download_phase1_nifty50_ohlc.py
       - name: Audit downloaded F&O reports
