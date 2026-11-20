@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 
 DATES = [
     "20261021","20261022","20261023","20261026","20261027","20261028","20261029","20261030",
@@ -101,6 +102,19 @@ def audit_day(ymd: str, previous_ymd: str | None) -> dict:
     trad_dates = pd.to_datetime(bh["TradDt"], errors="coerce").dropna().dt.normalize().unique()
     biz_dates = pd.to_datetime(bh["BizDt"], errors="coerce").dropna().dt.normalize().unique()
     expected = pd.Timestamp(d.date())
+    index_path = ROOT / "nifty50_ohlc" / f"ind_close_all_{ddmmyyyy}.csv"
+    if not index_path.exists():
+        raise FileNotFoundError(f"{d:%Y-%m-%d}: missing NIFTY 50 index CSV")
+    index_df = pd.read_csv(index_path)
+    index_rows = index_df[index_df["Index Name"].astype(str).str.strip().str.lower() == "nifty 50"]
+    if len(index_rows) != 1:
+        raise ValueError(f"{d:%Y-%m-%d}: expected one NIFTY 50 row, got {len(index_rows)}")
+    ix = index_rows.iloc[0]
+    index_date = pd.to_datetime(ix["Index Date"], format="%d-%m-%Y", errors="coerce")
+    ix_open, ix_high, ix_low, ix_close = [float(ix[col]) for col in
+        ["Open Index Value", "High Index Value", "Low Index Value", "Closing Index Value"]]
+    index_ohlc_valid = ix_high >= max(ix_open, ix_low, ix_close) and ix_low <= min(ix_open, ix_high, ix_close)
+    underlying_price = float(b["UndrlygPric_n"].dropna().iloc[0]) if b["UndrlygPric_n"].notna().any() else None
     return {
         "date": expected.strftime("%Y-%m-%d"),
         "bhavcopy_filename": bh_path.name, "mii_filename": mii_path.name,
@@ -124,7 +138,12 @@ def audit_day(ymd: str, previous_ymd: str | None) -> dict:
         "zero_volume_rows_with_zero_open_high_low": int((zero[["OpnPric_n", "HghPric_n", "LwPric_n"]] == 0).all(axis=1).sum()),
         "underlying_missing_rows": int(b["UndrlygPric_n"].isna().sum()),
         "underlying_unique_values": int(b["UndrlygPric_n"].nunique()),
-        "underlying_price": float(b["UndrlygPric_n"].dropna().iloc[0]) if b["UndrlygPric_n"].notna().any() else None,
+        "underlying_price": underlying_price,
+        "nifty50_index_date_match": pd.notna(index_date) and index_date.normalize() == expected,
+        "nifty50_index_ohlc_valid": index_ohlc_valid,
+        "nifty50_index_open": ix_open, "nifty50_index_high": ix_high, "nifty50_index_low": ix_low,
+        "nifty50_index_close": ix_close,
+        "underlying_equals_nifty50_close": underlying_price is not None and np.isclose(underlying_price, ix_close, atol=1e-8),
         "mii_prtd_to_trad_counts": c["PrtdToTrad"].value_counts(dropna=False).to_dict(),
         "mii_del_flag_counts": c["DelFlg"].value_counts(dropna=False).to_dict(),
     }
@@ -152,6 +171,8 @@ def main():
         "no_negative_volume_or_oi": int(df["negative_volume_rows"].sum()) == 0 and int(df["negative_oi_rows"].sum()) == 0,
         "all_traded_option_ohlc_valid": int(df["traded_ohlc_invalid_rows"].sum()) == 0 and int(df["traded_ohlc_nonpositive_rows"].sum()) == 0,
         "underlying_present_and_single_value_per_day": int(df["underlying_missing_rows"].sum()) == 0 and bool((df["underlying_unique_values"] == 1).all()),
+        "all_nifty50_index_dates_and_ohlc_valid": bool(df["nifty50_index_date_match"].all() and df["nifty50_index_ohlc_valid"].all()),
+        "underlying_price_matches_nifty50_index_close_all_sessions": bool(df["underlying_equals_nifty50_close"].all()),
         "zero_volume_rows_preserved": True,
     }
     summary = {
