@@ -36,4 +36,4 @@ The backend is one deployable application. Its modules have distinct responsibil
 A Render Blueprint is checked in as an optional deployment definition. The API service declares the free compute plan, automatic deploy is disabled, and the static frontend has no compute plan. No Render service, persistent database or production environment has been created. Actual availability and provider pricing must be checked before any deployment.
 
 ## Deferred decisions
-Persistent cloud database provisioning, background job infrastructure, production authentication, data-ingestion scheduling and actual B2 bucket activation are deferred until their requirements and credentials are available.
+Persistent cloud database provisioning, background job infrastructure, production authentication and data-ingestion scheduling are deferred until their requirements are available. The B2 adapter and CI bucket-connectivity check are configured; live file upload, download and delete behavior remains to be validated when those operations are implemented in a later phase.
