@@ -39,6 +39,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'phase-0-foundation' || github.ref }}
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -74,6 +76,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'phase-0-foundation' || github.ref }}
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
