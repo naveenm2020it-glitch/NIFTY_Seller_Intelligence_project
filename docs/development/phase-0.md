@@ -1,5 +1,7 @@
 # Phase 0 — New Repository & Complete Foundation Setup
 
+<badge>COMPLETED</badge> **Phase 0 status: Completed — 20 November 2026.** The technical foundation, remote CI validation, live B2 bucket reachability check and Phase 0 documentation are complete. The remaining `main` branch protection setting is a recommended repository safeguard, not a Phase 0 technical exit blocker.
+
 Scope: establish the new repository and a reproducible application foundation. This phase does not implement NIFTY analysis, NSE data acquisition or trading intelligence.
 
 ## Original seven-step plan
@@ -45,7 +47,7 @@ The latest recorded Phase 0 validation is GitHub Actions run [#15 — Phase 0 Fo
 
 The backend job installed dependencies, started a temporary PostgreSQL 16 service, applied the Alembic baseline, ran backend tests and completed the live B2 connectivity check. The B2 check uses `HeadBucket` and verifies access to the configured bucket without changing its contents. The frontend job installed Node.js dependencies and completed the Vite production build.
 
-Run #15 was manually dispatched from the `main` workflow configuration commit `327c08d7749c33d0610a9e2d746c4bc0015bab14`; the workflow checks out and validates the `phase-0-foundation` working branch. The working branch head recorded after this validation is `15936e5a332bdf2ac98ccdba1a00352efb59df78`.
+Run #15 was manually dispatched from the `main` workflow configuration commit `327c08d7749c33d0610a9e2d746c4bc0015bab14`; the workflow checks out and validates the `phase-0-foundation` working branch. The Phase 0 documentation closeout was subsequently committed on `phase-0-foundation`; the latest closeout commit is recorded in the repository branch history.
 
 The workflow provisions a temporary PostgreSQL 16 service. It is destroyed when the workflow ends. CI does not provide persistent hosting or a permanent database.
 
@@ -70,6 +72,6 @@ No application code has been merged to `main` as part of this Phase 0 validation
 
 ## Phase 0 exit decision
 
-**The Phase 0 application foundation and remote CI validation are complete, including live Backblaze B2 bucket connectivity.** The repository has a working development branch, backend checks and frontend build pass, and the live B2 check succeeds. Main-branch protection remains a recommended repository safeguard and is not yet configured.
+**PHASE 0 IS FORMALLY MARKED COMPLETED — 20 November 2026.** The application foundation, remote CI validation, live Backblaze B2 bucket reachability check and documentation closeout are complete. Backend checks and frontend build passed in run #15. Main-branch protection remains a recommended repository safeguard and is not configured; it is not a technical Phase 0 exit blocker. No application code has been merged to `main`, and no production deployment has been performed.
 
 Phase 1 may begin with the historical EOD data audit and approved data-model design, while preserving the Phase 0 exclusions. Phase 1 implementation must follow the approved project requirements and its own acceptance checks.
