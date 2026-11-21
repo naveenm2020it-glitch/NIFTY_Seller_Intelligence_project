@@ -1,6 +1,6 @@
 name: Phase 1 - Official NSE connectivity probe
 # Manual Run workflow_dispatch is available only when this file is on the repository default branch.
-# This branch-scoped workflow is intentionally executed by pushes to phase1-nse-runner-environment.
+# Always run the Phase 1 tools from the dedicated audit branch, even when manually dispatched from main.
 
 on:
   push:
@@ -16,8 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout
+      - name: Checkout Phase 1 audit branch
         uses: actions/checkout@v4
+        with:
+          ref: phase1-nse-runner-environment
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
