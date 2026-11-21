@@ -1,5 +1,6 @@
 name: Phase 1 - Official NSE connectivity probe
-# Trigger a fresh Phase 1 audit on the corrected branch head.
+# Manual Run workflow_dispatch is available only when this file is on the repository default branch.
+# This branch-scoped workflow is intentionally executed by pushes to phase1-nse-runner-environment.
 
 on:
   push:
