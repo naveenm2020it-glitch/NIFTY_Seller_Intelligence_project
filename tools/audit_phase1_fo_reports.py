@@ -131,6 +131,7 @@ def audit_day(ymd: str, previous_ymd: str | None) -> dict:
         "previous_day_expiry_contract_matches": prev_expiry_count, "unmatched_contract_ids": unmatched,
         "expiry_matches": expiry_ok, "strike_matches": strike_ok, "option_type_matches": option_ok,
         "zero_volume_rows": len(zero), "traded_rows": len(traded),
+        "missing_volume_rows": int(b["TtlTradgVol_n"].isna().sum()),
         "negative_volume_rows": int((b["TtlTradgVol_n"] < 0).sum()),
         "negative_oi_rows": int((b["OpnIntrst_n"] < 0).sum()),
         "traded_ohlc_invalid_rows": int(ohlc_bad.sum()),
@@ -172,7 +173,9 @@ def main():
         "underlying_present_and_single_value_per_day": int(df["underlying_missing_rows"].sum()) == 0 and bool((df["underlying_unique_values"] == 1).all()),
         "all_nifty50_index_dates_and_ohlc_valid": bool(df["nifty50_index_date_match"].all() and df["nifty50_index_ohlc_valid"].all()),
         "underlying_price_matches_nifty50_index_close_all_sessions": bool(df["underlying_equals_nifty50_close"].all()),
-        "zero_volume_rows_preserved": True,
+        "all_option_volume_rows_accounted_for": bool((df["zero_volume_rows"] + df["traded_rows"] + df["negative_volume_rows"] + df["missing_volume_rows"] == df["nifty_option_rows"]).all()),
+        "no_missing_volume_values": int(df["missing_volume_rows"].sum()) == 0,
+        "zero_volume_rows_have_zero_open_high_low": bool((df["zero_volume_rows_with_zero_open_high_low"] == df["zero_volume_rows"]).all()),
     }
     summary = {
         "sessions": len(df),
@@ -180,7 +183,7 @@ def main():
         "fallback_2026-10-19": "downloaded as contingency only; excluded from selected 22-session set",
         "totals": {k: int(df[k].sum()) for k in [
             "bhavcopy_total_rows","nifty_option_rows","ce_rows","pe_rows","mii_nifty_option_rows",
-            "zero_volume_rows","traded_rows","same_day_contract_matches","previous_day_expiry_contract_matches",
+            "zero_volume_rows","traded_rows","missing_volume_rows","negative_volume_rows","same_day_contract_matches","previous_day_expiry_contract_matches",
             "unmatched_contract_ids","expiry_matches","strike_matches","option_type_matches"
         ]},
         "checks": checks,
