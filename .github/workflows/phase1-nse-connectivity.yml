@@ -1,0 +1,53 @@
+name: Phase 1 - Official NSE connectivity probe
+# Manual Run workflow_dispatch is available only when this file is on the repository default branch.
+# This branch-scoped workflow is intentionally executed by pushes to phase1-nse-runner-environment.
+
+on:
+  push:
+    branches:
+      - phase1-nse-runner-environment
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install probe dependency
+        run: python -m pip install --disable-pip-version-check requests
+      - name: Install audit dependency
+        run: python -m pip install --disable-pip-version-check pandas numpy
+      - name: Probe official source connectivity
+        run: python tools/nse_connectivity_probe.py
+      - name: Inspect official NSE Indices historical-data UI
+        run: python tools/inspect_niftyindices_page.py
+      - name: Probe official NIFTY 50 historical OHLC endpoint
+        run: python tools/probe_niftyindices_api.py
+      - name: Probe official NIFTY 50 historical JSON asset
+        run: python tools/probe_niftyindices_static_json.py
+      - name: Probe official NSE India historical index API
+        run: python tools/probe_nse_indices_history_api.py
+      - name: Download official NSE Phase 1 F&O reports
+        run: python tools/download_phase1_fo_reports.py
+      - name: Probe official NSE index archive hosts
+        run: python tools/probe_nse_index_archive_hosts.py
+      - name: Download official NSE NIFTY 50 OHLC CSVs
+        run: python tools/download_phase1_nifty50_ohlc.py
+      - name: Audit downloaded F&O reports
+        run: python tools/audit_phase1_fo_reports.py
+      - name: Upload diagnostic report
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-nse-fo-index-download-and-diagnostics
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
