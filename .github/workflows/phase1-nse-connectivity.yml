@@ -1,4 +1,5 @@
 name: Phase 1 - Official NSE connectivity probe
+# Trigger a fresh Phase 1 audit on the corrected branch head.
 
 on:
   push:
