@@ -10,7 +10,7 @@ class ConfigurationPreview(BaseModel):
     analysis_date: date
     available_expiries: list[date]
     nearest_expiry: date
-    selected_expiry: date | None
+    selected_expiry: date
     expiry_selection_mode: ExpirySelectionMode
     automatic_fallback: bool = False
     fallback_reason: str | None = None
@@ -24,7 +24,7 @@ class AnalysisRunResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str
     analysis_date: date
-    selected_expiry: date
+    selected_expiry: date | None
     expiry_selection_mode: ExpirySelectionMode
     status: str
     config_snapshot: dict
