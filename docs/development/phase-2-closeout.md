@@ -2,22 +2,23 @@
 
 **Status: COMPLETED — 23 November 2026**  
 **Working branch:** `phase-2-user-config-orchestration`  
-**Validated commit:** `65aeba89af8b849d188170be78820f920576a7df`  
-**Main branch:** unchanged at `1dc7a7b0a063874c103b5ecd2b0fd79230c8ebe7`
+**Validated implementation commit:** `c8c2540ee1b895b1d1a0abbd1de4c46cb2e538e8`  
+**Main branch before Phase 2 integration:** `1dc7a2b0a063874c103b5ecd2b0fd79230c8ebe7`
 
 ## 1. Completion evidence
 
 Phase 2 implementation and real-archive verification passed in GitHub Actions.
 
 - **Initial real-archive CI run:** [45150719524](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/45150719524) — completed successfully using the retained GitHub artifact.
-- **Durable B2-backed CI run:** [45151719516](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/45151719516) — completed successfully after downloading and verifying the preserved B2 archive. This is the current CI path.
-- **Backend job:** 20 tests passed; one dependency deprecation warning.
-- **Frontend job:** Vite production build passed.
+- **Durable B2-backed CI run:** [45151719516](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/45151719516) — completed successfully after downloading and verifying the preserved B2 archive.
+- **Latest Phase 2 documentation CI run:** [45152067891](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/45152067891) — completed successfully on the validated Phase 2 branch head.
+- **Backend:** 20 tests passed; one dependency deprecation warning.
+- **Frontend:** Vite production build passed.
 - **Database:** PostgreSQL 16 service started and Alembic migrations upgraded successfully.
 - **Object storage:** configured Backblaze B2 bucket connectivity check passed.
-- **Historical input:** downloaded the verified Phase 1 workflow artifact (artifact ID `14688805993`, source workflow run `44858251380`) and staged its manifests and raw source files into the documented Phase 2 archive layout. The NSE source files were not modified.
+- **Historical input:** downloaded and verified the Phase 1 preservation archive (artifact ID `14688805993`, source workflow run `44858251380`).
 
-The real-archive smoke test is implemented in `backend/tests/test_phase2_real_archive_smoke.py` and enabled in the Phase 2 CI job. The current job downloads the 78-object B2 preservation copy, verifies all 68 raw source files against their SHA-256/byte manifests and rechecks the 15/15 Phase 1 audit, stages the verified archive, sets `DATA_STORAGE_PATH`, migrates PostgreSQL and exercises the application API. The temporary GitHub Actions artifact is no longer a runtime dependency for CI.
+The real-archive smoke test is implemented in `backend/tests/test_phase2_real_archive_smoke.py`. The CI job downloads the 78-object B2 preservation copy, verifies all 68 raw source files against SHA-256/byte manifests and rechecks the 15/15 Phase 1 audit, stages the verified archive, sets `DATA_STORAGE_PATH`, migrates PostgreSQL and exercises the application API. The temporary GitHub Actions artifact is no longer a runtime dependency for CI.
 
 ## 2. Real archive API and persistence checks
 
@@ -51,14 +52,14 @@ The test asserts that `analytics_executed` is false. Phase 2 validates and hands
 The following remain intentionally outside Phase 2:
 
 - No automated NSE acquisition.
-- No automatic B2 archive download/materialization in the application. The CI smoke test stages the temporary GitHub Actions artifact into the documented local archive layout.
+- No automatic B2 archive download/materialization in the application. The CI smoke test stages the verified archive into the documented local archive layout.
 - No data-cleaning/normalization or feature engineering.
 - No analytical engines, eight-scenario decision engine, ML models or feedback learning.
 - No live-market analysis, broker integration, order placement or trade execution.
-- No persistent hosted database, production service or production deployment.
+- No persistent hosted database, hosted service or production deployment.
 
-The CI PostgreSQL database was ephemeral and existed only for the test job. No persistent cloud database was created. The B2 archive download is a CI verification step; the application itself still reads an extracted local archive and does not automatically materialize B2 objects.
+The CI PostgreSQL database was ephemeral and existed only for the test job. No persistent cloud database was created. The application still reads an extracted local archive and does not automatically materialize B2 objects.
 
 ## 5. Final disposition
 
-Phase 2 acceptance gates are satisfied for the defined configuration and orchestration scope. Proceed to Phase 3 — Storage & Data Processing — on a separate working branch after this closeout is reviewed. Do not merge to `main` or deploy without explicit approval.
+**PHASE 2 COMPLETED — 23 November 2026.** Its defined acceptance gates are satisfied. The user has explicitly approved integration of the completed Phase 2 working branch into `main` through a pull request. This approval does not authorize production deployment. Proceed to Phase 3 — Storage & Data Processing — on a separate working branch after integration is verified.
