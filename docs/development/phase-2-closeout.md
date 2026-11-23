@@ -62,4 +62,4 @@ The CI PostgreSQL database was ephemeral and existed only for the test job. No p
 
 ## 5. Final disposition
 
-**PHASE 2 COMPLETED — 23 November 2026.** Its defined acceptance gates are satisfied. The user has explicitly approved integration of the completed Phase 2 working branch into `main` through a pull request. This approval does not authorize production deployment. Proceed to Phase 3 — Storage & Data Processing — on a separate working branch after integration is verified.
+**PHASE 2 COMPLETED — 23 November 2026.** Its defined acceptance gates are satisfied. PR [#5](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/5) was merged into `main` on 23-Nov-2026. Merge commit: `82fcb219748e35ef22ab9fb51d71fd111b2d32de`. The integration does not authorize production deployment. Proceed to Phase 3 — Storage & Data Processing — on a separate working branch.
