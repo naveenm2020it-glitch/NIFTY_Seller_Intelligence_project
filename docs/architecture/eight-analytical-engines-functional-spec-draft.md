@@ -1,10 +1,10 @@
-# Eight Analytical Engines — Functional Specification Draft
+# Eight Analytical Engines — Functional and Option-Selection Requirements (Revised Draft)
 
 **Status:** Draft for project-owner review; proposed functional decomposition, not yet approved  
 **Project:** NIFTY Seller Intelligence  
 **Scope:** NIFTY 50 and NIFTY CE/PE only; historical end-of-day (EOD) analysis  
 **Depends on:** Phase 0–3 foundation and the Phase 3 EOD data contract  
-**Purpose:** Define what each of the eight analytical engines is responsible for before finalizing the EOD report inventory.
+**Purpose:** Define each engine and the complete EOD decision requirements, including NIFTY spot breakout/breakdown levels, CE/PE contract selection, adaptive option-premium triggers, sequential confirmation logic, entry reference, stop-loss, targets and eight scenarios, before finalizing the EOD report inventory.
 
 > **Approval boundary:** The project materials establish the need for eight analytical engines and describe the required analytical capabilities, but they do not provide an approved list of eight engine names, formulas or contracts. The eight names and boundaries below are a proposed decomposition of those documented capabilities. They must be reviewed and approved before implementation. No formula or report dependency in this draft should be treated as final.
 
@@ -447,3 +447,164 @@ This draft is based on:
 - Repository **docs/development/phase-3-data-contract.md**: actual normalized NIFTY 50 and NIFTY CE/PE EOD data contract.
 
 The source materials do not provide the final eight engine names, formulas, thresholds, scenario definitions or acceptance criteria. Those remain proposed or unresolved in this document. No new NSE report acquisition, implementation, deployment or change to Phase 3 is authorized by this draft.
+
+
+---
+
+## 10. Mandatory option-selection and breakout decision requirements
+
+**This section captures the previously discussed project requirements that were missing from the first draft.** The application must not stop at saying "CE premium is strong" or "NIFTY broke resistance". It must calculate and report the actual spot level, the selected CE/PE contract, the reference premium and the adaptive premium trigger values for the selected Analysis Date and user-selected Expiry.
+
+### 10.1 Separate the two kinds of levels
+
+The system must calculate and display two different kinds of trigger. They must never be mixed.
+
+1. **NIFTY spot trigger level:** the underlying index price level at which a support breakdown, support recovery, resistance breakout or resistance rejection is being evaluated.
+2. **Option premium trigger level:** the selected CE or PE contract's own premium level that must be crossed/held for the option-side confirmation.
+
+For the underlying spot structure, use these labels:
+- **S1:** first relevant support level.
+- **S2:** second relevant support level.
+- **R1:** first relevant resistance level.
+- **R2:** second relevant resistance level.
+
+The Price Structure and Key Levels Engine must derive these from validated historical NIFTY 50 OHLC observations and the approved level methodology. It must show the historical dates/observations supporting each level, the lookback used, the calculation/version, the strength or evidence measure, and whether the level is valid, weak or unavailable.
+
+The level method must be historically tested and versioned. The project must not insert arbitrary fixed NIFTY point distances or hardcoded levels. The exact support/resistance formula, clustering tolerance, minimum evidence and level-strength thresholds remain to be approved through historical validation; this document does not invent numeric values.
+
+### 10.2 Which option premium and strike must be selected?
+
+For each Analysis Date and user-selected Expiry, the system must evaluate eligible NIFTY CE and PE contracts and select a reference contract for each side. The expiry remains the user's selected input; the application must not silently substitute a different expiry.
+
+The contract-selection output must explicitly state:
+- Selected CE contract: strike, expiry, option type, moneyness classification (ITM/ATM/OTM), reference premium and why it was selected.
+- Selected PE contract: strike, expiry, option type, moneyness classification (ITM/ATM/OTM), reference premium and why it was selected.
+- Ranked alternative eligible strikes on each side, with reasons they ranked lower.
+- Whether the selected contract has sufficient historical continuity, valid OHLC, volume and OI evidence for analysis.
+- Any limitation caused by missing or zero-volume records.
+
+The selection logic must rank ITM, ATM and OTM candidates using an approved, historically validated method. It must not assume that the nearest ATM strike is always the best contract. The ranking should assess, where the available EOD data supports it, moneyness, premium behaviour/responsiveness, volume, OI, data continuity and expiry context. EOD volume and OI are evidence of activity/positioning, not a substitute for bid/ask spread, executable liquidity or a guarantee of fill quality. The current core report set does not provide a verified bid/ask spread field; the application must not claim it has measured spread or execution quality.
+
+No fixed strike offset, fixed premium band or arbitrary minimum volume/OI threshold should be hardcoded. Candidate ranking features and cut-offs must be documented, versioned and validated before implementation.
+
+### 10.3 Reference premium and adaptive premium triggers
+
+For both selected CE and PE contracts, calculate and report:
+- **Reference premium:** the EOD premium used as the baseline for the selected contract and Analysis Date.
+- **Primary premium upper trigger:** the adaptive premium level the directionally relevant option must cross.
+- **Opposite premium lower trigger:** the adaptive premium level the opposite option must fall below as confirmation.
+- Trigger calculation method, historical observations, window, version and data sufficiency.
+- Premium trigger invalidation condition.
+
+The agreed trigger mode is **both_adaptive**: both the primary premium upper trigger and the opposite premium lower trigger are adaptive. Neither trigger is a fixed manually entered premium value. Their calculation must be derived from historical evidence, with relevant option premium, OI, volume, strike/expiry, volatility/pricing context and NIFTY spot behaviour considered where valid and available.
+
+The exact adaptive formula, lookback weighting, minimum sample size and thresholds are not yet specified in the source material. They must be established by historical testing and approved; do not fabricate a formula or fixed percentage in this document.
+
+### 10.4 Sequential confirmation requirement
+
+The agreed confirmation timing is **sequential**, not a requirement that all trigger conditions occur simultaneously.
+
+The scenario definition must record the expected order of evidence:
+1. NIFTY spot reaches or crosses the relevant validated S1/S2/R1/R2 trigger condition.
+2. The directionally relevant option premium crosses its adaptive primary upper trigger.
+3. The opposite option premium crosses below its adaptive lower trigger.
+4. The full scenario is considered confirmed only when all required stages and invalidation checks in that scenario's approved rule are satisfied.
+
+The system must record the expected sequence and which stage is satisfied, not satisfied, unknown or invalidated. The exact tolerance, persistence/hold rule and permitted sequence timing must be established through historical validation and documented in the scenario rule version.
+
+**EOD-only boundary:** this project does not monitor live prices or intraday confirmation. The application may produce an EOD-derived next-session plan describing the expected sequential confirmation conditions. It must not claim that the sequence actually occurred during the next session unless that session's permitted EOD evidence is later ingested and the outcome is evaluated retrospectively. Do not add a cutoff-time input or live confirmation service.
+
+### 10.5 Directional premium confirmation
+
+The primary and opposite premium conditions are direction-dependent:
+
+| Intended setup | Spot condition | Primary option condition | Opposite option condition |
+|---|---|---|---|
+| **BUY CE** | NIFTY moves upward through/recovers the applicable spot trigger | Selected CE premium crosses above its adaptive upper trigger | Selected PE premium falls below its adaptive lower trigger |
+| **BUY PE** | NIFTY moves downward through/breaks the applicable spot trigger | Selected PE premium crosses above its adaptive upper trigger | Selected CE premium falls below its adaptive lower trigger |
+
+All three are required stages for a fully confirmed setup under the sequential rule. If only some stages are supported, the output must say **pending / partially confirmed**, not confirmed. If evidence conflicts or an invalidation condition occurs, the output must say **invalidated** or **WAIT**, as appropriate.
+
+### 10.6 Entry reference, stop-loss, targets and invalidation
+
+For every scenario candidate, the output must include:
+- Selected option side and exact contract (CE/PE, strike and user-selected expiry).
+- Reference premium and the adaptive primary/opposite premium triggers.
+- NIFTY spot trigger level and relevant S/R label.
+- Expected sequential confirmation steps.
+- Entry reference (clearly labelled as an EOD-derived reference, not a live executable quote).
+- Stop-loss reference and the rule used to derive it.
+- One or more target references and the rule used to derive them.
+- Scenario invalidation conditions, including spot-level failure, premium-trigger failure and contradictory evidence.
+- Reasons to return WAIT / no setup.
+
+Stop-loss and target methodology must be historically validated and versioned. No fixed percentage, fixed points, risk/reward ratio or guaranteed-return claim is approved by this requirements document. If the required evidence is insufficient, the system must return unavailable rather than invent entry, SL or target values.
+
+---
+
+## 11. Eight-scenario decision requirements
+
+The Eight-Scenario Decision Engine must evaluate the following scenario families. The mapping below preserves the previously discussed direction requirements. The exact formulas and numeric thresholds for each scenario remain subject to historical validation and approval.
+
+| Scenario | Underlying structure | Intended option-buyer direction | Required premium confirmation |
+|---|---|---|---|
+| **S1 Breakdown** | NIFTY breaks the validated first support (S1) | BUY PE | PE above adaptive primary upper trigger; CE below adaptive opposite lower trigger |
+| **S2 Breakdown** | NIFTY breaks the validated second support (S2) | BUY PE | PE above adaptive primary upper trigger; CE below adaptive opposite lower trigger |
+| **S1 Recovery** | NIFTY recovers the validated first support (S1) | BUY CE | CE above adaptive primary upper trigger; PE below adaptive opposite lower trigger |
+| **S2 Recovery** | NIFTY recovers the validated second support (S2) | BUY CE | CE above adaptive primary upper trigger; PE below adaptive opposite lower trigger |
+| **R1 Breakout** | NIFTY breaks the validated first resistance (R1) | BUY CE | CE above adaptive primary upper trigger; PE below adaptive opposite lower trigger |
+| **R2 Breakout** | NIFTY breaks the validated second resistance (R2) | BUY CE | CE above adaptive primary upper trigger; PE below adaptive opposite lower trigger |
+| **R1/R2 Rejection** | NIFTY rejects/fails at the relevant validated resistance level | BUY PE | PE above adaptive primary upper trigger; CE below adaptive opposite lower trigger |
+| **WAIT / No Setup** | No valid level event, incomplete confirmation, conflicting evidence, invalidation or insufficient data | No trade direction | Do not force a CE/PE selection or report a confirmed premium trigger |
+
+**Scenario clarification:** S1/S2 are support references and R1/R2 are resistance references. The recovery/rejection scenario must be tied to an explicitly defined historical level interaction; the exact EOD evidence required to label a recovery or rejection must be specified in the scenario rules. Daily OHLC alone cannot establish the intraday path or prove an intraday rejection.
+
+For every scenario, Engine 8 must return all eight scenario statuses, not just the selected one. It must identify the leading scenario only when the approved conditions are met, and otherwise return WAIT. It must preserve alternative scenario evidence and explain why the alternatives did not qualify.
+
+---
+
+## 12. Engine ownership updates for option selection
+
+The following responsibilities are mandatory so the premium/strike/level decisions do not fall between engines:
+
+- **Engine 1 — Market Regime and Trend:** supplies NIFTY 50 trend/regime context used to qualify or weaken breakout/recovery scenarios.
+- **Engine 2 — Price Structure and Key Levels:** owns S1, S2, R1 and R2 calculation, evidence, strength, breakout/breakdown/recovery/rejection state and spot-trigger references.
+- **Engine 3 — Contract OI and Positioning:** supplies contract-level OI, OI change and volume evidence for strike ranking and seller/buyer positioning interpretation.
+- **Engine 4 — CE/PE Premium Behaviour:** owns CE/PE contract comparison, reference premiums, adaptive primary upper trigger and opposite lower trigger calculation, and premium-trigger status.
+- **Engine 5 — Volatility and Pricing Context:** supplies volatility/time-to-expiry context used when evaluating premium behaviour and candidate strike suitability; model estimates must remain labelled.
+- **Engine 6 — Participant Positioning Context:** supplies optional broad participant-category context only; it must not override NIFTY contract evidence or be treated as NIFTY-specific.
+- **Engine 7 — Seller Trap and Setup Detection:** combines spot, level, contract, premium and volatility evidence; produces the selected CE/PE contract candidate, seller-trap explanation, sequential setup plan, entry reference, SL, targets and invalidation conditions.
+- **Engine 8 — Eight-Scenario Decision:** evaluates S1/S2 breakdowns, S1/S2 recoveries, R1/R2 breakouts, R1/R2 rejections and WAIT; returns the final scenario status and direction only when all required conditions are satisfied.
+
+The exact contract-selection ranking algorithm and exact formulas remain open design decisions. The engine ownership and required outputs above are requirements, not permission to hardcode arbitrary values.
+
+## 13. Required consolidated analysis report
+
+For the selected Analysis Date and user-selected Expiry, the consolidated report must present:
+
+1. **Underlying context:** NIFTY 50 close, regime/trend and 1/5/22-session evidence.
+2. **Spot levels:** S1, S2, R1 and R2, with derivation method, historical support, level strength and current status.
+3. **Strike selection:** selected CE and PE contracts, strike, ITM/ATM/OTM classification, reference premium, ranking and reason for selection; include ranked alternatives.
+4. **Premium trigger table:** for each selected contract, reference premium, adaptive upper/lower trigger as applicable, trigger method/version and whether the condition is met/unknown/invalidated.
+5. **Scenario matrix:** all eight scenario statuses, underlying spot condition, required CE/PE premium conditions, sequential stage and final WAIT/qualified status.
+6. **Setup details:** selected BUY CE/BUY PE candidate, seller-trap evidence, entry reference, stop-loss, target(s), invalidation and reasons to avoid.
+7. **Evidence and limitations:** OI/volume interpretation, volatility context, unavailable optional reports, missing history, conflicts and EOD-only limitation.
+8. **Provenance:** Analysis Run ID, source hashes, engine/rule versions, selected expiry and all historical sessions used.
+
+The report must distinguish observed EOD values, calculated levels, model-derived estimates and inferred setup interpretations.
+
+## 14. Decisions still requiring formal approval
+
+This revised requirements draft recovers the previously discussed decision behaviour, but it does not invent unrecorded numeric formulas. Before implementation, approve or specify:
+1. The exact S1/S2/R1/R2 level-generation formula, level clustering and strength criteria.
+2. The ITM/ATM/OTM classification boundaries and contract-ranking score/weights.
+3. The adaptive primary premium upper-trigger formula.
+4. The adaptive opposite premium lower-trigger formula (both triggers remain adaptive).
+5. The sequential confirmation persistence/timing rules and invalidation tolerances.
+6. The exact entry-reference, stop-loss and target calculation methods.
+7. The exact EOD evidence rules for breakdown, recovery, breakout and rejection.
+8. Historical validation method, minimum sample requirements and acceptance thresholds for each scenario.
+9. The complete eight-scenario catalogue and its versioned rule definitions.
+
+These decisions must be tested against historical data using separate training and validation observations. The 1/5/22-session views are the analysis windows; overlapping windows must not be counted as independent validation samples. The larger archive should be retained for broader validation across market regimes.
+
