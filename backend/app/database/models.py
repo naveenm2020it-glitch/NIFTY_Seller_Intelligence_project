@@ -6,7 +6,7 @@ from app.database.base import Base
 class AnalysisRun(Base):
     __tablename__ = "analysis_runs"
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    idempotency_key: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    idempotency_key: Mapped[str] = mapped_column(String(128), unique=True)
     request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     analysis_date: Mapped[datetime.date] = mapped_column(Date, nullable=False, index=True)
     selected_expiry: Mapped[datetime.date] = mapped_column(Date, nullable=False)
