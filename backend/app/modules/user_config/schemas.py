@@ -10,7 +10,7 @@ class ConfigurationPreview(BaseModel):
     analysis_date: date
     available_expiries: list[date]
     nearest_expiry: date
-    selected_expiry: date
+    selected_expiry: date | None
     expiry_selection_mode: ExpirySelectionMode
     automatic_fallback: bool = False
     fallback_reason: str | None = None
