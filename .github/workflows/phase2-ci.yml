@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   backend:
-    name: Backend checks
+    name: Backend checks (unit and PostgreSQL migration)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -41,6 +41,31 @@ jobs:
         working-directory: backend
     env:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/nifty_seller_intelligence
+      DATA_STORAGE_PATH: ${{ github.workspace }}/local_data
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install backend dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Apply database migrations
+        run: alembic upgrade head
+      - name: Run backend unit and synthetic archive tests
+        run: python -m pytest -q --ignore=tests/test_phase2_real_archive_smoke.py
+
+  historical-archive:
+    name: Phase 1 real archive smoke (credential and B2-cap dependent)
+    runs-on: ubuntu-latest
+    if: ${{ secrets.B2_ENDPOINT_URL != '' && secrets.B2_REGION != '' && secrets.B2_BUCKET_NAME != '' && secrets.B2_APPLICATION_KEY_ID != '' && secrets.B2_APPLICATION_KEY != '' }}
+    defaults:
+      run:
+        working-directory: backend
+    env:
       DATA_STORAGE_PATH: ${{ github.workspace }}/local_data
       PHASE2_REAL_ARCHIVE_SMOKE: "1"
     steps:
@@ -73,7 +98,7 @@ jobs:
           test -f "$GITHUB_WORKSPACE/local_data/artifacts/manifests/nifty50-download-manifest.json"
       - name: Apply database migrations
         run: alembic upgrade head
-      - name: Run backend tests including real archive and PostgreSQL smoke test
+      - name: Run backend tests including real archive and PostgreSQL smoke
         run: python -m pytest -q
 
   frontend:
