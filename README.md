@@ -21,7 +21,7 @@ React + Vite frontend; Python + FastAPI modular monolith; PostgreSQL; optional B
 | Phase 1 — Historical EOD Data Audit | Completed — 23 November 2026 | docs/development/phase-1-closeout.md |
 | Phase 2 — User Configuration & Data Orchestration | Completed — 23 November 2026 | docs/development/phase-2-closeout.md |
 
-Phase 1 and Phase 2 are complete on the Phase 2 working branch. Phase 2 integration into `main` is being performed through an explicitly approved pull request. Completion does not authorize production deployment.
+Phase 1 and Phase 2 are complete and integrated into `main` through merged PR [#5](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/5). Merge commit: `82fcb219748e35ef22ab9fb51d71fd111b2d32de`. Completion does not authorize production deployment.
 
 ## Phase 2 implementation boundary
 The API and frontend provide analysis-date selection, automatic nearest available expiry, manual expiry override, explicit Start Analysis, idempotent run records, source-manifest provenance and checksum/schema validation. `READY_FOR_PROCESSING` means only that inputs are validated for a later phase; no analytics are executed. The application reads an extracted local Phase 1 archive and does not automate NSE collection. See the Phase 2 data contract for archive layout and API details.
