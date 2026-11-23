@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+from importlib.metadata import PackageNotFoundError, version
+import platform
 import hashlib, json
 from uuid import uuid4
 from sqlalchemy import select
@@ -9,6 +11,14 @@ from app.modules.user_config.archive import ArchiveError, resolve_configuration,
 from app.modules.user_config.schemas import StartAnalysisRequest
 
 def _now(): return datetime.now(timezone.utc).isoformat()
+def _software_versions():
+    packages = {}
+    for package in ("fastapi", "SQLAlchemy", "pandas", "numpy", "scikit-learn"):
+        try: packages[package] = version(package)
+        except PackageNotFoundError: packages[package] = "not-installed"
+    return {"application": "0.2.0", "orchestrator": "phase2-v1",
+            "python": platform.python_version(), "packages": packages,
+            "analytical_models": "not-implemented-in-phase-2"}
 def _hash(request):
     value = {"analysis_date": request.analysis_date.isoformat(), "expiry": request.expiry.isoformat() if request.expiry else None}
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
@@ -26,7 +36,8 @@ def start_analysis(db: Session, request: StartAnalysisRequest):
         analysis_date=request.analysis_date, selected_expiry=request.expiry,
         expiry_selection_mode="MANUAL" if request.expiry else "AUTO", status="RUNNING",
         config_snapshot={"analysis_date": request.analysis_date.isoformat(), "requested_expiry": request.expiry.isoformat() if request.expiry else None,
-                         "expiry_selection_mode": "MANUAL" if request.expiry else "AUTO", "preferences": {}},
+                         "expiry_selection_mode": "MANUAL" if request.expiry else "AUTO", "preferences": {},
+                         "schema_version": "phase2-config-v1", "software_versions": _software_versions()},
         source_provenance={}, stage_results=[], error_message=None)
     db.add(run)
     try: db.commit()
