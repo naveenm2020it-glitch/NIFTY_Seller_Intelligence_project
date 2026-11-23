@@ -31,10 +31,10 @@ for page in ("https://www.nseindia.com/","https://www.nseindia.com/all-reports-d
  except requests.RequestException: pass
 
 REPORTS=[
- ("participant_open_interest","F&O - Participant wise Open Interest(csv)",f"fao_participant_oi_{DDMMYYYY}.csv"),
- ("participant_trading_volume","F&O - Participant wise Trading Volumes(csv)",f"fao_participant_vol_{DDMMYYYY}.csv"),
- ("market_activity","F&O - Market Activity Report",f"fo{DDMMYYYY}.zip"),
- ("daily_settlement_prices","F&O - Daily Settlement Prices(csv)",f"FOSett_prce_{DDMMYYYY}.csv"),
+ ("participant_open_interest","F&O-Participant wise Open Interest (csv)",f"fao_participant_oi_{DDMMYYYY}.csv"),
+ ("participant_trading_volume","F&O-Participant wise Trading Volumes (csv)",f"fao_participant_vol_{DDMMYYYY}.csv"),
+ ("market_activity","F&O-Market Activity Report",f"fo{DDMMYYYY}.zip"),
+ ("daily_settlement_prices","F&O-Daily Settlement Prices (csv)",f"FOSett_prce_{DDMMYYYY}.csv"),
 ]
 # NSE report catalogue places F&O reports under derivatives / equity-derivatives.
 CATEGORIES=["derivatives"]
