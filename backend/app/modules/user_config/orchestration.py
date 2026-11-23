@@ -23,7 +23,7 @@ def start_analysis(db: Session, request: StartAnalysisRequest):
         if existing.request_hash != digest: raise ValueError("This idempotency key was already used with a different configuration.")
         return existing, False
     run = AnalysisRun(id=str(uuid4()), idempotency_key=request.idempotency_key, request_hash=digest,
-        analysis_date=request.analysis_date, selected_expiry=request.expiry or request.analysis_date,
+        analysis_date=request.analysis_date, selected_expiry=request.expiry,
         expiry_selection_mode="MANUAL" if request.expiry else "AUTO", status="RUNNING",
         config_snapshot={"analysis_date": request.analysis_date.isoformat(), "requested_expiry": request.expiry.isoformat() if request.expiry else None,
                          "expiry_selection_mode": "MANUAL" if request.expiry else "AUTO", "preferences": {}},
