@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from sqlalchemy import Date, DateTime, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database.base import Base
@@ -8,7 +8,7 @@ class AnalysisRun(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     idempotency_key: Mapped[str] = mapped_column(String(128), unique=True)
     request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    analysis_date: Mapped[datetime.date] = mapped_column(Date, nullable=False, index=True)
+    analysis_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     selected_expiry: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     expiry_selection_mode: Mapped[str] = mapped_column(String(10), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
