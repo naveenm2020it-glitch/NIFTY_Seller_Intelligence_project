@@ -1,0 +1,66 @@
+name: Preserve Phase 1 NSE audit archive in Backblaze B2
+
+on:
+  push:
+    branches:
+      - phase-1-data-audit
+    paths:
+      - .github/workflows/phase1-archive-to-b2.yml
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: phase1-b2-archive
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    name: Verify and upload Phase 1 archive
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Phase 1 branch
+        uses: actions/checkout@v4
+        with:
+          ref: phase-1-data-audit
+
+      - name: Download the exact verified GitHub Actions artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-artifact
+          curl --fail --location --silent --show-error --retry 3 --retry-delay 2 \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/14688805993/zip" \
+            --output "${RUNNER_TEMP}/phase1-nse-artifact.zip"
+          echo "f1f8ca45a0e1228469d0e0c73d8dacb97d53e3fc21c50d74de14e531865cf8a4  ${RUNNER_TEMP}/phase1-nse-artifact.zip" | sha256sum --check --strict
+          unzip -q "${RUNNER_TEMP}/phase1-nse-artifact.zip" -d phase1-artifact
+          test -f phase1-artifact/manifests/fo-download-manifest.json
+          test -f phase1-artifact/manifests/nifty50-download-manifest.json
+          test -f phase1-artifact/audit/phase1-fo-audit-summary.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install B2 S3-compatible client
+        run: python -m pip install --disable-pip-version-check boto3
+
+      - name: Verify source manifests and upload to private B2 bucket
+        env:
+          PHASE1_ARTIFACT_DIR: phase1-artifact
+          SOURCE_ARTIFACT_ID: "14688805993"
+          SOURCE_ARTIFACT_SHA256: "f1f8ca45a0e1228469d0e0c73d8dacb97d53e3fc21c50d74de14e531865cf8a4"
+          B2_ENDPOINT_URL: ${{ secrets.B2_ENDPOINT_URL }}
+          B2_REGION: ${{ secrets.B2_REGION }}
+          B2_BUCKET_NAME: ${{ secrets.B2_BUCKET_NAME }}
+          B2_APPLICATION_KEY_ID: ${{ secrets.B2_APPLICATION_KEY_ID }}
+          B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+          B2_PREFIX: "nifty-seller-intelligence/phase1/2026-11-23"
+        run: python tools/upload_phase1_archive_to_b2.py

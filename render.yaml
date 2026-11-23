@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: nifty-seller-intelligence-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeployTrigger: "off"
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: B2_ENDPOINT_URL
+        sync: false
+      - key: B2_REGION
+        sync: false
+      - key: B2_BUCKET_NAME
+        sync: false
+      - key: B2_APPLICATION_KEY_ID
+        sync: false
+      - key: B2_APPLICATION_KEY
+        sync: false
+  - type: web
+    name: nifty-seller-intelligence-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install --no-audit --no-fund && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
