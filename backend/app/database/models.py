@@ -1,5 +1,5 @@
 from datetime import date, datetime, timezone
-from sqlalchemy import BigInteger, Date, DateTime, Float, ForeignKey, Index, JSON, String, Text, UniqueConstraint
+from sqlalchemy import BigInteger, Date, DateTime, Float, ForeignKey, Index, Integer, JSON, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database.base import Base
 
@@ -49,7 +49,7 @@ class Nifty50EodBar(Base):
 
 class NiftyOptionEodBar(Base):
     __tablename__ = "nifty_option_eod_bars"
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True)
     trade_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     symbol: Mapped[str] = mapped_column(String(16), nullable=False, default="NIFTY")
     instrument_id: Mapped[str] = mapped_column(String(32), nullable=False)

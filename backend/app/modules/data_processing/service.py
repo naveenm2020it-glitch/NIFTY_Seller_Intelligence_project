@@ -30,8 +30,14 @@ def process_analysis_run(db:Session,run_id:str):
         payload=build_session_payload(run.analysis_date,run.selected_expiry)
         source_manifest=payload["sources"]
         source_hash=_canonical_hash(source_manifest)
-        if existing and existing.source_set_hash!=source_hash:
-            raise ProcessingConflict("Source set differs from the recorded ingestion batch; refusing overwrite.")
+        if existing and existing.source_set_hash != source_hash:
+            # A failed attempt that could not verify source files has no trustworthy source-set hash.
+            # Bind its retry to the first subsequently verified manifest; completed or persisted attempts remain immutable.
+            if existing.status == "FAILED" and existing.source_set_hash == "0" * 64:
+                existing.source_set_hash = source_hash
+                existing.source_manifest = source_manifest
+            else:
+                raise ProcessingConflict("Source set differs from the recorded ingestion batch; refusing overwrite.")
         if existing and existing.status=="COMPLETED":
             if run.status!="PROCESSED":
                 run.status="PROCESSED"; db.commit()
@@ -84,12 +90,12 @@ def process_analysis_run(db:Session,run_id:str):
         failed=db.scalar(select(AnalysisRun).where(AnalysisRun.id==run_id).with_for_update())
         batch=db.scalar(select(EodIngestionBatch).where(EodIngestionBatch.analysis_run_id==run_id))
         manifest=(payload["sources"] if "payload" in locals() else _failure_manifest(failed))
-        source_hash=(source_hash if "source_hash" in locals() else _canonical_hash(manifest))
+        source_hash=(source_hash if "source_hash" in locals() else ("0" * 64))
         safe_reason=str(exc) if isinstance(exc,(ProcessingConflict,ValueError)) else "Historical processing failed while reading or validating archive data."
         if batch is None:
             batch=EodIngestionBatch(id=uuid4().hex,analysis_run_id=run_id,trade_date=failed.analysis_date,
                 selected_expiry=failed.selected_expiry,source_set_hash=source_hash,status="FAILED",
-                source_manifest=manifest,validation_summary={},row_counts={},error_message=safe_reason)
+                source_manifest=manifest,validation_summary={"source_set_hash_unverified": True},row_counts={},error_message=safe_reason)
             db.add(batch)
         else:
             batch.status="FAILED";batch.error_message=safe_reason;batch.updated_at=_now()
