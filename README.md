@@ -4,57 +4,30 @@ A historical, end-of-day (EOD) NIFTY options analysis application built around t
 
 **Think like an Option Seller. Generate opportunities for an Option Buyer.**
 
-## Project principles
-- NIFTY 50 and NIFTY options only.
-- Historical EOD analysis; no live-market analysis.
-- No automated trading or order execution.
-- Use permitted, freely accessible NSE reports and preserve original source files.
-- Zero mandatory recurring software or infrastructure subscriptions; optional B2 usage can incur provider charges.
-- Reproducible analysis with recorded inputs, configurations and model versions.
+## Principles
+- NIFTY 50 and NIFTY options only; historical EOD analysis only.
+- No live-market analysis, automated trading or order execution.
+- Preserve original permitted NSE source files.
+- Reproducible analysis with recorded inputs, configurations and provenance.
 - Pattern improvements require historical validation before approval.
 
-## Technology architecture
-- Frontend: React + Vite
-- Backend: Python + FastAPI
-- Architecture: Modular monolith
-- Database: PostgreSQL
-- Object storage: Backblaze B2 through its S3-compatible API (optional credentials)
-- Data processing: Pandas + NumPy
-- Machine learning foundation: Scikit-learn
-- Testing: Pytest
-- Development and validation: GitHub Actions remote CI; optional local setup
-
-## Repository layout
-- `backend/`: FastAPI application, database, storage adapter and business modules.
-- `frontend/`: React web application.
-- `docs/`: Architecture, database, storage, API and development documentation.
-- `scripts/`: Reserved for setup, data and maintenance utilities.
-- `tests/`: Cross-module integration tests.
-- `storage/`: Repository placeholder only. Actual historical data must not be committed.
+## Architecture
+React + Vite frontend; Python + FastAPI modular monolith; PostgreSQL; optional Backblaze B2 S3-compatible storage; Pandas + NumPy; Scikit-learn; Pytest.
 
 ## Development status
-
-| Phase | Status | Source of truth |
+| Phase | Status | Source |
 |---|---|---|
-| Phase 0 — New Repository & Complete Foundation Setup | **Completed** | [Phase 0 checklist](docs/development/phase-0.md) |
-| Phase 1 — Historical EOD Data Audit | **Completed — 23 November 2026** | [Phase 1 closeout](docs/development/phase-1-closeout.md) |
-| Phase 2 — User Configuration & Data Orchestration | **In progress — requirements documented; application implementation pending** | [Phase 2 requirements](docs/development/phase-2-user-configuration-and-orchestration.md) |
+| Phase 0 — Foundation | Completed | docs/development/phase-0.md |
+| Phase 1 — Historical EOD Data Audit | Completed — 23 November 2026 | docs/development/phase-1-closeout.md |
+| Phase 2 — User Configuration & Data Orchestration | Implementation in progress | docs/development/phase-2-user-configuration-and-orchestration.md and docs/development/phase-2-data-contract.md |
 
-Phase 1 acquisition and audit tooling, closeout evidence and preservation utilities are integrated into the Phase 2 development branch. The Phase 1 branch history is retained as a parent of the integration commit. This integration does not merge into `main` and does not authorize production deployment.
+Phase 1 history and audit tooling are integrated into this branch. Phase 2 changes do not target main or authorize deployment.
 
-See the [Phase 1 closeout](docs/development/phase-1-closeout.md), [Phase 1 sample audit](docs/development/phase-1-sample-audit.md), [Phase 2 requirements](docs/development/phase-2-user-configuration-and-orchestration.md), [EOD report inventory review](docs/data/eod-report-inventory-review.md), [Phase 0 checklist](docs/development/phase-0.md), [setup guide](docs/development/setup.md), [storage guide](docs/storage/README.md), and [remote validation guide](docs/development/remote-validation.md).
+## Phase 2 implementation boundary
+The API and frontend provide analysis-date selection, automatic nearest available expiry, manual expiry override, explicit Start Analysis, idempotent run records, source-manifest provenance and checksum/schema validation. READY_FOR_PROCESSING means only that inputs are validated for a later phase; no analytics are executed. The application reads an extracted local Phase 1 archive and does not automate NSE collection. See the Phase 2 data contract for archive layout and API details.
 
-GitHub Actions runners and PostgreSQL services are temporary validation environments, not a persistent server, database or hosted application. Render configuration is prepared but no deployment has been made.
-
-## Data-source compliance
-Before implementing automated NSE data acquisition, review the applicable NSE terms and determine which reports and collection methods permit the intended use. Do not bypass access controls or implement collection methods prohibited by the source terms.
-
-## Security
-- Keep credentials and local configuration in an untracked `.env` file or deployment secret store.
-- Never commit API keys, passwords, tokens, personal data or raw historical archives.
-- Use `.env.example` only for placeholder variable names and safe example values.
-- CI database credentials are disposable test-only values for the ephemeral PostgreSQL service.
-- B2 tests use a mock client and do not require real credentials.
+## Security and operations
+Keep credentials in an untracked .env or secret store. Never commit credentials or raw market archives. B2 remains optional; this phase does not claim remote B2 archive materialization. CI uses temporary PostgreSQL and does not host the application. No production deployment is authorized.
 
 ## License
-No project license has been selected yet. Do not assume that this repository or its contents are open for unrestricted reuse until a license is chosen.
+No project license has been selected. Do not assume unrestricted reuse.
