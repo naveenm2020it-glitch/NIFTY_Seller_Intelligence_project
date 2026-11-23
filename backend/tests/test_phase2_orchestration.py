@@ -24,13 +24,19 @@ def client(tmp_path, monkeypatch):
     mipath=raw/"mii_contracts"/f"NSE_FO_contract_{dmy}.csv.gz"
     mii=pd.DataFrame([
       {"FinInstrmId":1001,"TckrSymb":"NIFTY","OptnTp":"CE","XpryDt":int((datetime(2026,11,26)-datetime(1980,1,1)).total_seconds()),"StrkPric":2600000},
-      {"FinInstrmId":1002,"TckrSymb":"NIFTY","OptnTp":"PE","XpryDt":int((datetime(2026,12,3)-datetime(1980,1,1)).total_seconds()),"StrkPric":2600000}])
+      {"FinInstrmId":1003,"TckrSymb":"NIFTY","OptnTp":"CE","XpryDt":int((datetime(2026,11,20)-datetime(1980,1,1)).total_seconds()),"StrkPric":2600000}])
     mii.to_csv(mipath,index=False,compression="gzip")
+    prior_path=raw/"mii_contracts"/"NSE_FO_contract_18112026.csv.gz"
+    prior=pd.DataFrame([{"FinInstrmId":1002,"TckrSymb":"NIFTY","OptnTp":"PE","XpryDt":int((datetime(2026,12,3)-datetime(1980,1,1)).total_seconds()),"StrkPric":2600000}])
+    prior.to_csv(prior_path,index=False,compression="gzip")
     ixpath=raw/"nifty50_ohlc"/f"ind_close_all_{dmy}.csv"
     pd.DataFrame([{"Index Name":"NIFTY 50","Index Date":day.strftime("%d-%m-%Y"),"Open Index Value":25900,"High Index Value":26100,"Low Index Value":25800,"Closing Index Value":26000}]).to_csv(ixpath,index=False)
     def ent(path,url):
       data=path.read_bytes();return {"status":"DOWNLOADED","path":str(path.relative_to(root)),"bytes":len(data),"sha256":hashlib.sha256(data).hexdigest(),"url":url}
-    (root/"artifacts/manifests/fo-download-manifest.json").write_text(json.dumps({"results":[{"date":day.isoformat(),"bhavcopy":ent(bhpath,"https://archives.nseindia.com/bhavcopy"),"mii_contract":ent(mipath,"https://archives.nseindia.com/mii")}] }))
+    (root/"artifacts/manifests/fo-download-manifest.json").write_text(json.dumps({"results":[
+      {"date":day.isoformat(),"bhavcopy":ent(bhpath,"https://archives.nseindia.com/bhavcopy"),"mii_contract":ent(mipath,"https://archives.nseindia.com/mii")},
+      {"date":"2026-11-18","mii_contract":ent(prior_path,"https://archives.nseindia.com/previous-mii")}
+    ] }))
     (root/"artifacts/manifests/nifty50-download-manifest.json").write_text(json.dumps({"results":[{"date":day.isoformat(),**ent(ixpath,"https://archives.nseindia.com/index")}] }))
     monkeypatch.setenv("DATA_STORAGE_PATH",str(root))
     engine=create_engine("sqlite://",connect_args={"check_same_thread":False},poolclass=StaticPool);Base.metadata.create_all(engine)
@@ -47,6 +53,8 @@ def test_preview_selects_nearest_expiry_and_does_not_create_run(client):
     c,day,_=client;r=c.get("/api/v1/configuration/resolve",params={"analysis_date":day.isoformat()})
     assert r.status_code==200 and r.json()["selected_expiry"]=="2026-11-26"
     assert r.json()["expiry_selection_mode"]=="AUTO"
+    assert r.json()["automatic_fallback"] is True
+    assert "Nearest MII expiry 2026-11-20" in r.json()["fallback_reason"]
     assert c.get("/api/v1/analysis-runs/not-created").status_code==404
 
 def test_manual_expiry_override(client):
@@ -58,6 +66,8 @@ def test_start_persists_run_and_provenance(client):
     assert r.status_code==201;data=r.json()
     assert data["status"]=="READY_FOR_PROCESSING" and data["selected_expiry"]=="2026-11-26"
     assert data["source_provenance"]["content_checks"]["nifty_option_rows"]==2
+    assert data["config_snapshot"]["automatic_fallback"] is True
+    assert any(x["kind"]=="previous_session_mii_contract" for x in data["source_provenance"]["sources"])
     assert data["stage_results"][-1]["details"]["analytics_executed"] is False
 
 def test_retry_is_idempotent_and_payload_conflict_rejected(client):
@@ -70,6 +80,8 @@ def test_corrupt_source_fails_safely(client):
     c,day,bhpath=client;bhpath.write_bytes(b"corrupt")
     r=c.post("/api/v1/analysis-runs",json={"analysis_date":day.isoformat(),"idempotency_key":"phase2-test-key-003"})
     assert r.status_code==422 and ("SHA-256 mismatch" in r.json()["detail"]["message"] or "file size mismatch" in r.json()["detail"]["message"])
+    run_id=r.json()["detail"]["run_id"]
+    assert c.get(f"/api/v1/analysis-runs/{run_id}").json()["status"]=="FAILED"
 
 def test_non_session_without_archive_data_is_rejected(client):
     c,_,_=client;r=c.get("/api/v1/configuration/resolve",params={"analysis_date":"2026-11-20"})
