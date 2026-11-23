@@ -1,6 +1,6 @@
 # Phase 2 — User Configuration & Data Orchestration
 
-**Status: STARTED — 23 November 2026**  
+**Status: IMPLEMENTATION IN PROGRESS — 23 November 2026**  
 **Working branch:** `phase-2-user-config-orchestration`  
 **Base:** `phase-0-foundation`
 
@@ -178,3 +178,12 @@ These decisions establish the first-version scope. Any change requires an explic
 ## 10. Exit boundary
 
 Phase 2 delivers configuration and orchestration foundations only. Data cleaning/normalization, 1/5/22-session feature engineering, analytical engines, scenarios, ML models, dashboard expansion and feedback learning remain later roadmap phases.
+
+
+## 11. Implementation note — 23 November 2026
+
+The first implementation slice is on the Phase 2 branch. The persistence model is limited to one table, analysis_runs; its fields, no-user-relationship boundary and no-automatic-deletion retention rule are documented in phase-2-data-contract.md. No other domain tables have been introduced.
+
+The API and frontend implement read-only configuration preview, automatic/manual expiry selection, explicit Start Analysis, idempotent run creation, source provenance and validation outcomes. READY_FOR_PROCESSING is only a validated-input handoff state. Analytical processing remains deferred to later phases.
+
+The implementation currently reads an extracted local copy of the Phase 1 archive. It does not automatically materialize the B2 archive or download from NSE. Phase 2 will not be marked complete until the final CI run passes and the configured extracted Phase 1 archive is exercised end-to-end.
