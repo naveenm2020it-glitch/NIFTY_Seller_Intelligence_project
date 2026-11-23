@@ -1,6 +1,6 @@
 """Read-only resolver for the approved Phase 1 local archive layout."""
 from __future__ import annotations
-import gzip, hashlib, json, os, zipfile
+import gzip, hashlib, json, math, os, zipfile
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -129,12 +129,15 @@ def _resolve_expiries(day: date, sources: tuple[SourceFile, ...]) -> tuple[list[
         cid, exp = _id(row.get("FinInstrmId")), _mii_expiry(row.get("XpryDt"))
         try: strike = float(row.get("StrkPric")) / 100.0
         except (TypeError, ValueError): strike = None
+        if strike is not None and not math.isfinite(strike): strike = None
         option_type = str(row.get("OptnTp", "")).upper()
         if exp and exp >= day: master_expiries.add(exp)
         if cid and exp and strike is not None: mapped[cid] = (exp, strike, option_type)
     bh_rows = b[["FinInstrmId", "XpryDt"]].to_dict("records")
     bh_ids = {_id(row["FinInstrmId"]) for row in bh_rows}
-    missing_ids = {cid for cid in bh_ids if cid and cid not in mapped}
+    if None in bh_ids:
+        raise ArchiveValidationError("Bhavcopy contains a NIFTY option row without a valid instrument ID.")
+    missing_ids = {cid for cid in bh_ids if cid not in mapped}
     previous_source = None
     if missing_ids:
         root = archive_root()
@@ -153,6 +156,7 @@ def _resolve_expiries(day: date, sources: tuple[SourceFile, ...]) -> tuple[list[
                     cid, exp = _id(row.get("FinInstrmId")), _mii_expiry(row.get("XpryDt"))
                     try: strike = float(row.get("StrkPric")) / 100.0
                     except (TypeError, ValueError): strike = None
+                    if strike is not None and not math.isfinite(strike): strike = None
                     option_type = str(row.get("OptnTp", "")).upper()
                     if cid in missing_ids and exp and strike is not None:
                         mapped[cid] = (exp, strike, option_type)
@@ -171,6 +175,7 @@ def _resolve_expiries(day: date, sources: tuple[SourceFile, ...]) -> tuple[list[
         mii_exp, mii_strike, mii_type = mapped[cid]
         try: bh_strike = float(row["StrkPric"])
         except (TypeError, ValueError): bh_strike = None
+        if bh_strike is not None and not math.isfinite(bh_strike): bh_strike = None
         if bh_exp != mii_exp:
             raise ArchiveValidationError(f"Contract expiry mismatch for instrument ID {cid}.")
         if bh_strike is None or abs(bh_strike - mii_strike) > 1e-8:
