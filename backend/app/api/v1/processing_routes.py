@@ -35,5 +35,5 @@ def get_processed_data(run_id:str,db:Session=Depends(get_db)):
     batch=get_batch_for_run(db,run_id)
     if batch is None or batch.status!="COMPLETED": raise HTTPException(status_code=409,detail="Historical data has not been processed successfully.")
     index_bar=db.scalar(select(Nifty50EodBar).where(Nifty50EodBar.trade_date==run.analysis_date))
-    options=list(db.scalars(select(NiftyOptionEodBar).where(NiftyOptionEodBar.ingestion_batch_id==batch.id).order_by(NiftyOptionEodBar.strike,NiftyOptionEodBar.option_type)))
+    options=list(db.scalars(select(NiftyOptionEodBar).where(NiftyOptionEodBar.trade_date==run.analysis_date,NiftyOptionEodBar.expiry==run.selected_expiry).order_by(NiftyOptionEodBar.strike,NiftyOptionEodBar.option_type)))
     return {"analysis_run_id":run.id,"trade_date":run.analysis_date,"selected_expiry":run.selected_expiry,"index_bar":{"trade_date":index_bar.trade_date,"symbol":index_bar.symbol,"open":index_bar.open,"high":index_bar.high,"low":index_bar.low,"close":index_bar.close},"option_rows":[{"instrument_id":r.instrument_id,"expiry":r.expiry,"strike":r.strike,"option_type":r.option_type,"open":r.open,"high":r.high,"low":r.low,"close":r.close,"volume":r.volume,"open_interest":r.open_interest,"underlying_close":r.underlying_close,"contract_source":r.contract_source} for r in options],"validation":batch.validation_summary}

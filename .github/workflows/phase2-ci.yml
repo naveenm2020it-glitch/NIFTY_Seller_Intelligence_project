@@ -1,4 +1,4 @@
-name: NIFTY Seller Intelligence Backend, Frontend and Phase 1 Archive CI
+name: NIFTY Seller Intelligence CI
 
 on:
   push:
@@ -43,7 +43,6 @@ jobs:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/nifty_seller_intelligence
       DATA_STORAGE_PATH: ${{ github.workspace }}/local_data
       PHASE2_REAL_ARCHIVE_SMOKE: "1"
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/nifty_seller_intelligence
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

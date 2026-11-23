@@ -101,6 +101,8 @@ def normalize_options(bhavcopy: pd.DataFrame, same_day_mii: pd.DataFrame, prior_
             raise ProcessingValidationError(f"Contract metadata mismatch for instrument ID {cid}.")
         if expiry!=selected_expiry: continue
         volume=_number(row["TtlTradgVol"],"TtlTradgVol"); oi=_number(row["OpnIntrst"],"OpnIntrst")
+        if not volume.is_integer(): raise ProcessingValidationError("TtlTradgVol must be an integer count.")
+        if not oi.is_integer(): raise ProcessingValidationError("OpnIntrst must be an integer count.")
         underlying=_number(row["UndrlygPric"],"UndrlygPric",allow_zero=False)
         if not math.isclose(underlying,index_close,rel_tol=0,abs_tol=1e-8): raise ProcessingValidationError(f"Underlying close does not match NIFTY 50 close for instrument ID {cid}.")
         prices={name:_number(row[column],column) for name,column in {"open":"OpnPric","high":"HghPric","low":"LwPric","close":"ClsPric"}.items()}
