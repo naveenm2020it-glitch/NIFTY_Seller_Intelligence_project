@@ -7,7 +7,7 @@ from pathlib import Path
 import requests
 import pandas as pd
 
-TRADE_DATE = os.getenv("TRADE_DATE", "2026-11-19")
+TRADE_DATE = os.getenv("TRADE_DATE", "2026-10-30")
 dt = datetime.strptime(TRADE_DATE, "%Y-%m-%d")
 ddmmyyyy, yyyymmdd = dt.strftime("%d%m%Y"), dt.strftime("%Y%m%d")
 ROOT = Path("artifacts/supplementary-sample")
@@ -18,10 +18,10 @@ S.headers.update({"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.
                   "Accept":"text/csv,application/zip,application/octet-stream,*/*",
                   "Referer":"https://www.nseindia.com/"})
 REPORTS = {
- "participant_open_interest":[f"https://nsearchives.nseindia.com/archives/nsccl/fao/fao_participant_oi_{ddmmyyyy}.csv",f"https://archives.nseindia.com/content/fo/fao_participant_oi_{ddmmyyyy}.csv"],
- "participant_trading_volume":[f"https://nsearchives.nseindia.com/archives/nsccl/fao/fao_participant_vol_{ddmmyyyy}.csv",f"https://archives.nseindia.com/content/fo/fao_participant_vol_{ddmmyyyy}.csv"],
- "market_activity":[f"https://nsearchives.nseindia.com/archives/nsccl/fao/fo{ddmmyyyy}.zip",f"https://nsearchives.nseindia.com/archives/nsccl/fo/fo{ddmmyyyy}.zip",f"https://archives.nseindia.com/content/fo/fo{ddmmyyyy}.zip"],
- "daily_settlement_prices":[f"https://nsearchives.nseindia.com/archives/nsccl/fao/FOSett_prce_{ddmmyyyy}.csv",f"https://archives.nseindia.com/content/fo/FOSett_prce_{ddmmyyyy}.csv"]}
+ "participant_open_interest":[f"https://nsearchives.nseindia.com/archives/nsccl/fao/fao_participant_oi_{ddmmyyyy}.csv",f"https://archives.nseindia.com/content/fo/fao_participant_oi_{ddmmyyyy}.csv",f"https://nsearchives.nseindia.com/content/fo/fao_participant_oi_{ddmmyyyy}.csv",f"https://archives.nseindia.com/archives/nsccl/fao/fao_participant_oi_{ddmmyyyy}.csv"],
+ "participant_trading_volume":[f"https://nsearchives.nseindia.com/archives/nsccl/fao/fao_participant_vol_{ddmmyyyy}.csv",f"https://archives.nseindia.com/content/fo/fao_participant_vol_{ddmmyyyy}.csv",f"https://nsearchives.nseindia.com/content/fo/fao_participant_vol_{ddmmyyyy}.csv",f"https://archives.nseindia.com/archives/nsccl/fao/fao_participant_vol_{ddmmyyyy}.csv"],
+ "market_activity":[f"https://nsearchives.nseindia.com/archives/nsccl/fao/fo{ddmmyyyy}.zip",f"https://nsearchives.nseindia.com/archives/nsccl/fo/fo{ddmmyyyy}.zip",f"https://archives.nseindia.com/content/fo/fo{ddmmyyyy}.zip",f"https://nsearchives.nseindia.com/content/fo/fo{ddmmyyyy}.zip",f"https://archives.nseindia.com/archives/nsccl/fao/fo{ddmmyyyy}.zip"],
+ "daily_settlement_prices":[f"https://nsearchives.nseindia.com/archives/nsccl/fao/FOSett_prce_{ddmmyyyy}.csv",f"https://archives.nseindia.com/content/fo/FOSett_prce_{ddmmyyyy}.csv",f"https://nsearchives.nseindia.com/content/fo/FOSett_prce_{ddmmyyyy}.csv",f"https://archives.nseindia.com/archives/nsccl/fao/FOSett_prce_{ddmmyyyy}.csv"]}
 BASE=[f"https://archives.nseindia.com/content/fo/BhavCopy_NSE_FO_0_0_0_{yyyymmdd}_F_0000.csv.zip",f"https://nsearchives.nseindia.com/archives/nsccl/fao/BhavCopy_NSE_FO_0_0_0_{yyyymmdd}_F_0000.csv.zip"]
 
 def digest(b): return hashlib.sha256(b).hexdigest()
