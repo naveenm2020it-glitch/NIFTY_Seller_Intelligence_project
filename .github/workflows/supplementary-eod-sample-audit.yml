@@ -1,0 +1,40 @@
+name: Supplementary NSE EOD one-day sample audit
+
+on:
+  push:
+    branches:
+      - phase-2-supplementary-report-sample-audit
+    paths:
+      - tools/audit_supplementary_eod_sample.py
+      - .github/workflows/supplementary-eod-sample-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  download-and-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TRADE_DATE: "2026-11-19"
+    steps:
+      - name: Checkout isolated audit branch
+        uses: actions/checkout@v4
+        with:
+          ref: phase-2-supplementary-report-sample-audit
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install audit dependencies
+        run: python -m pip install --disable-pip-version-check requests pandas
+      - name: Download original NSE EOD reports and audit schemas
+        run: python tools/audit_supplementary_eod_sample.py
+      - name: Publish original files and audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nse-supplementary-eod-sample-2026-11-19
+          path: artifacts/supplementary-sample/
+          if-no-files-found: warn
+          retention-days: 14
