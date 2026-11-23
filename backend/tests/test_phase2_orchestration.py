@@ -66,6 +66,8 @@ def test_start_persists_run_and_provenance(client):
     assert r.status_code==201;data=r.json()
     assert data["status"]=="READY_FOR_PROCESSING" and data["selected_expiry"]=="2026-11-26"
     assert data["source_provenance"]["content_checks"]["nifty_option_rows"]==2
+    assert data["config_snapshot"]["software_versions"]["application"]=="0.2.0"
+    assert data["config_snapshot"]["software_versions"]["analytical_models"]=="not-implemented-in-phase-2"
     assert data["config_snapshot"]["automatic_fallback"] is True
     assert any(x["kind"]=="previous_session_mii_contract" for x in data["source_provenance"]["sources"])
     assert data["stage_results"][-1]["details"]["analytics_executed"] is False
@@ -82,6 +84,11 @@ def test_corrupt_source_fails_safely(client):
     assert r.status_code==422 and ("SHA-256 mismatch" in r.json()["detail"]["message"] or "file size mismatch" in r.json()["detail"]["message"])
     run_id=r.json()["detail"]["run_id"]
     assert c.get(f"/api/v1/analysis-runs/{run_id}").json()["status"]=="FAILED"
+
+def test_cutoff_time_is_not_an_accepted_configuration_field(client):
+    c,day,_=client
+    response=c.post("/api/v1/analysis-runs",json={"analysis_date":day.isoformat(),"idempotency_key":"phase2-cutoff-key","cutoff_time":"14:00"})
+    assert response.status_code==422
 
 def test_non_session_without_archive_data_is_rejected(client):
     c,_,_=client;r=c.get("/api/v1/configuration/resolve",params={"analysis_date":"2026-11-20"})
