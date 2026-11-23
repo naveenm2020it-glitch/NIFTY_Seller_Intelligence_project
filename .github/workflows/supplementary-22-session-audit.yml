@@ -1,0 +1,36 @@
+name: NSE supplementary 22-session historical audit
+
+on:
+  push:
+    branches:
+      - phase-2-supplementary-report-sample-audit
+    paths:
+      - tools/audit_supplementary_22_sessions.py
+      - .github/workflows/supplementary-22-session-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: phase-2-supplementary-report-sample-audit
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check requests pandas
+      - name: Download and audit 22 historical sessions
+        run: python tools/audit_supplementary_22_sessions.py
+      - name: Upload original reports and audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nse-supplementary-22-session-audit
+          path: artifacts/supplementary-22-session-audit/
+          if-no-files-found: warn
+          retention-days: 30
