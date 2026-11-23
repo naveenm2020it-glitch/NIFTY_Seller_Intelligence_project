@@ -32,7 +32,9 @@ reports=[
  {"key":"market_activity","filename":f"fo{ddmmyyyy}.zip",
   "url":f"https://nsearchives.nseindia.com/archives/fo/mkt/fo{ddmmyyyy}.zip","kind":"zip"},
  {"key":"daily_settlement_prices","filename":f"FOSett_prce_{ddmmyyyy}.csv",
-  "url":f"https://nsearchives.nseindia.com/archives/nsccl/fao/FOSett_prce_{ddmmyyyy}.csv","kind":"csv"},
+  "url":f"https://nsearchives.nseindia.com/archives/nsccl/sett/FOSett_prce_{ddmmyyyy}.csv","kind":"csv"},
+ {"key":"daily_volatility","filename":f"FOVOLT_{ddmmyyyy}.csv",
+  "url":f"https://nsearchives.nseindia.com/archives/nsccl/volt/FOVOLT_{ddmmyyyy}.csv","kind":"csv"},
 ]
 results=[]
 for report in reports:
