@@ -17,7 +17,7 @@ def client(tmp_path, monkeypatch):
     day=date(2026,11,19); ymd=day.strftime("%Y%m%d"); dmy=day.strftime("%d%m%Y")
     bhpath=raw/"fo_bhavcopy"/f"BhavCopy_NSE_FO_0_0_0_{ymd}_F_0000.csv.zip"
     bh=pd.DataFrame([
-      {"TradDt":day.isoformat(),"FinInstrmId":1001,"TckrSymb":"NIFTY","OptnTp":"CE","XpryDt":"2026-11-26","StrkPric":2600000,"ClsPric":100,"TtlTradgVol":10,"OpnIntrst":20,"UndrlygPric":26000},
+      {"TradDt":day.isoformat(),"FinInstrmId":1001,"TckrSymb":"NIFTY","OptnTp":"CE","XpryDt":"2026-11-26","StrkPric":26000,"ClsPric":100,"TtlTradgVol":10,"OpnIntrst":20,"UndrlygPric":26000},
       {"TradDt":day.isoformat(),"FinInstrmId":1002,"TckrSymb":"NIFTY","OptnTp":"PE","XpryDt":"2026-12-03","StrkPric":2600000,"ClsPric":110,"TtlTradgVol":12,"OpnIntrst":30,"UndrlygPric":26000}])
     temp=root/"bh.csv"; bh.to_csv(temp,index=False)
     with zipfile.ZipFile(bhpath,"w",zipfile.ZIP_DEFLATED) as z:z.write(temp,"bh.csv")
