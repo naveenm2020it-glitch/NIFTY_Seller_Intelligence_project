@@ -3,7 +3,7 @@ import {createRoot} from "react-dom/client";
 import {getAnalysisDates,resolveConfiguration,startAnalysis} from "./services/api";
 import "./style.css";
 function App(){
- const [dates,setDates]=useState([]),[analysisDate,setAnalysisDate]=useState(""),[expiry,setExpiry]=useState("");
+ const [dates,setDates]=useState([]),[analysisDate,setAnalysisDate]=useState(""),[expiryOverride,setExpiryOverride]=useState("");
  const [preview,setPreview]=useState(null),[loadingDates,setLoadingDates]=useState(true),[loadingPreview,setLoadingPreview]=useState(false);
  const [starting,setStarting]=useState(false),[run,setRun]=useState(null),[error,setError]=useState("");
  useEffect(()=>{getAnalysisDates().then(v=>{setDates(v);if(v.length)setAnalysisDate(v[v.length-1]);}).catch(e=>setError(e.message)).finally(()=>setLoadingDates(false));},[]);
