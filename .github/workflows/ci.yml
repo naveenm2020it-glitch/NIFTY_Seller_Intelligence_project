@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   backend:
@@ -41,6 +42,8 @@ jobs:
         working-directory: backend
     env:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/nifty_seller_intelligence
+      DATA_STORAGE_PATH: ${{ github.workspace }}/local_data
+      PHASE2_REAL_ARCHIVE_SMOKE: "1"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -52,9 +55,25 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - name: Install backend dependencies
         run: python -m pip install -r requirements.txt
+      - name: Download and stage the verified Phase 1 archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/local_data"
+          curl --fail --location --retry 3 \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/artifacts/14688805993/zip" \
+            --output /tmp/phase1-verified-archive.zip
+          unzip -q /tmp/phase1-verified-archive.zip -d "$GITHUB_WORKSPACE/local_data"
+          mkdir -p "$GITHUB_WORKSPACE/local_data/artifacts"
+          mv "$GITHUB_WORKSPACE/local_data/manifests" "$GITHUB_WORKSPACE/local_data/artifacts/manifests"
+          mv "$GITHUB_WORKSPACE/local_data/raw" "$GITHUB_WORKSPACE/local_data/artifacts/raw"
+          test -f "$GITHUB_WORKSPACE/local_data/artifacts/manifests/fo-download-manifest.json"
+          test -f "$GITHUB_WORKSPACE/local_data/artifacts/manifests/nifty50-download-manifest.json"
       - name: Apply database migrations
         run: alembic upgrade head
-      - name: Run backend tests
+      - name: Run backend tests including real archive and PostgreSQL smoke test
         run: python -m pytest -q
       - name: Verify live Backblaze B2 connectivity when credentials are configured
         env:
