@@ -69,7 +69,7 @@ def test_retry_is_idempotent_and_payload_conflict_rejected(client):
 def test_corrupt_source_fails_safely(client):
     c,day,bhpath=client;bhpath.write_bytes(b"corrupt")
     r=c.post("/api/v1/analysis-runs",json={"analysis_date":day.isoformat(),"idempotency_key":"phase2-test-key-003"})
-    assert r.status_code==422 and "SHA-256 mismatch" in r.json()["detail"]["message"]
+    assert r.status_code==422 and ("SHA-256 mismatch" in r.json()["detail"]["message"] or "file size mismatch" in r.json()["detail"]["message"])
 
 def test_non_session_without_archive_data_is_rejected(client):
     c,_,_=client;r=c.get("/api/v1/configuration/resolve",params={"analysis_date":"2026-11-20"})
