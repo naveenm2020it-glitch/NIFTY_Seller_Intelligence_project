@@ -57,9 +57,14 @@ def test_preview_selects_nearest_expiry_and_does_not_create_run(client):
     assert "Nearest MII expiry 2026-11-20" in r.json()["fallback_reason"]
     assert c.get("/api/v1/analysis-runs/not-created").status_code==404
 
-def test_manual_expiry_override(client):
-    c,day,_=client;r=c.get("/api/v1/configuration/resolve",params={"analysis_date":day.isoformat(),"expiry":"2026-12-03"})
-    assert r.status_code==200 and r.json()["expiry_selection_mode"]=="MANUAL"
+def test_manual_expiry_override_is_persisted(client):
+    c,day,_=client
+    preview=c.get("/api/v1/configuration/resolve",params={"analysis_date":day.isoformat(),"expiry":"2026-12-03"})
+    assert preview.status_code==200 and preview.json()["expiry_selection_mode"]=="MANUAL"
+    run=c.post("/api/v1/analysis-runs",json={"analysis_date":day.isoformat(),"expiry":"2026-12-03","idempotency_key":"phase2-manual-key"})
+    assert run.status_code==201
+    assert run.json()["selected_expiry"]=="2026-12-03"
+    assert run.json()["expiry_selection_mode"]=="MANUAL"
 
 def test_start_persists_run_and_provenance(client):
     c,day,_=client;r=c.post("/api/v1/analysis-runs",json={"analysis_date":day.isoformat(),"idempotency_key":"phase2-test-key-001"})
