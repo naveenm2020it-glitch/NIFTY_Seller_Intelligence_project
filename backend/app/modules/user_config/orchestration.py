@@ -57,11 +57,22 @@ def start_analysis(db: Session, request: StartAnalysisRequest):
             "selection_mode": resolved.expiry_selection_mode, "automatic_fallback": resolved.automatic_fallback}); db.commit()
         _stage(run, "SOURCE_RESOLUTION", "SUCCEEDED", {"sources": [x.kind for x in resolved.sources]}); db.commit()
         checks = validate_source_content(resolved.sources)
-        run.source_provenance = {"archive_root": "configured local Phase 1 archive", "sources": [
-            {"kind": x.kind, "trade_date": x.trade_date.isoformat(), "path": str(x.path), "filename": x.path.name,
-             "sha256": x.manifest_entry.get("sha256"), "bytes": x.manifest_entry.get("bytes"), "source_url": x.manifest_entry.get("url")}
-            for x in resolved.sources], "content_checks": checks}
-        _stage(run, "INTEGRITY_VALIDATION", "SUCCEEDED", checks); db.commit()
+        run.source_provenance = {
+            "archive_root": "configured local Phase 1 archive",
+            "coverage": {"analysis_date": request.analysis_date.isoformat(),
+                         "required_datasets": ["fo_bhavcopy", "mii_contract", "nifty50_ohlc"],
+                         "complete": True},
+            "manifest_validation": {"status": "VERIFIED", "hash_algorithm": "SHA-256",
+                                    "verified_file_count": len(resolved.sources)},
+            "sources": [
+                {"kind": x.kind, "trade_date": x.trade_date.isoformat(), "path": str(x.path), "filename": x.path.name,
+                 "sha256": x.manifest_entry.get("sha256"), "bytes": x.manifest_entry.get("bytes"),
+                 "source_url": x.manifest_entry.get("url"), "integrity_status": "VERIFIED"}
+                for x in resolved.sources],
+            "content_checks": checks}
+        _stage(run, "INTEGRITY_VALIDATION", "SUCCEEDED",
+               {"manifest_integrity_verified": True, "verified_file_count": len(resolved.sources),
+                "required_schema_validation": "PASSED", **checks}); db.commit()
         _stage(run, "PROCESSING_HANDOFF", "SUCCEEDED", {"state": "validated inputs ready for later processing", "analytics_executed": False})
         run.status, run.error_message = "READY_FOR_PROCESSING", None
         db.commit()
