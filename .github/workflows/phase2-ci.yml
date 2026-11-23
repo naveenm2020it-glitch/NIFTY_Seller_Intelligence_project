@@ -1,4 +1,4 @@
-name: NIFTY Seller Intelligence Phase 2 CI
+name: NIFTY Seller Intelligence Backend, Frontend and Phase 1 Archive CI
 
 on:
   push:
@@ -6,11 +6,13 @@ on:
       - phase-0-foundation
       - phase-1-data-audit
       - phase-2-user-config-orchestration
+      - phase-3-storage-data-processing
       - main
   pull_request:
     branches:
       - main
       - phase-2-user-config-orchestration
+      - phase-3-storage-data-processing
   workflow_dispatch:
 
 permissions:
@@ -41,6 +43,7 @@ jobs:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/nifty_seller_intelligence
       DATA_STORAGE_PATH: ${{ github.workspace }}/local_data
       PHASE2_REAL_ARCHIVE_SMOKE: "1"
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/nifty_seller_intelligence
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

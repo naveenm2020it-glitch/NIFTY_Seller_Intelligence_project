@@ -31,3 +31,7 @@ Keep credentials in an untracked .env or secret store. Never commit credentials 
 
 ## License
 No project license has been selected. Do not assume unrestricted reuse.
+
+| Phase 3 — Storage & Data Processing | In progress on `phase-3-storage-data-processing` | docs/development/phase-3-implementation-plan.md; docs/development/phase-3-data-contract.md |
+
+Phase 3 introduces explicit manifest-backed historical normalization and PostgreSQL persistence. It does not execute analytics or generate option-selling signals. See [Phase 3 data contract](docs/development/phase-3-data-contract.md).

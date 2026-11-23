@@ -8,8 +8,8 @@ The backend is one deployable application. Its modules have distinct responsibil
 ## Backend module boundaries
 - `user_config`: analysis date, intended cutoff time, expiry selection and user preferences.
 - `nse_data`: acquisition of permitted NSE reports and source metadata.
-- `data_validation`: file integrity, required fields, duplicate and completeness checks.
-- `data_processing`: cleaning, normalization and historical data preparation.
+- `data_validation`: source integrity, schema, contract, OHLC, volume/OI and underlying-close validation (Phase 3).
+- `data_processing`: manifest-backed historical normalization and transactional EOD persistence (Phase 3).
 - `feature_engineering`: session-based features for 1, 5 and 22 trading sessions.
 - `analytics`: eight analytical engines, as defined by the approved functional specification.
 - `scenarios`: eight-scenario decision engine.
