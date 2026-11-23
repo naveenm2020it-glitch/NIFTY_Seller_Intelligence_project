@@ -121,6 +121,8 @@ def _resolve_expiries(day: date, sources: tuple[SourceFile, ...]) -> tuple[list[
         raise ArchiveValidationError("Bhavcopy trade date does not match requested analysis date.")
     b = bh[(bh.TckrSymb.astype(str).str.upper() == "NIFTY") & bh.OptnTp.astype(str).str.upper().isin(["CE", "PE"])]
     m = mii[(mii.TckrSymb.astype(str).str.upper() == "NIFTY") & mii.OptnTp.astype(str).str.upper().isin(["CE", "PE"])]
+    if b["FinInstrmId"].map(_id).duplicated().any() or m["FinInstrmId"].map(_id).duplicated().any():
+        raise ArchiveValidationError("Duplicate NIFTY option instrument IDs found in Bhavcopy or MII.")
     mapped: dict[str, tuple[date, float, str]] = {}
     master_expiries: set[date] = set()
     for row in m.to_dict("records"):
@@ -210,5 +212,8 @@ def validate_source_content(sources: tuple[SourceFile, SourceFile, SourceFile]) 
     req_bh = {"FinInstrmId", "TckrSymb", "OptnTp", "XpryDt", "StrkPric", "ClsPric", "TtlTradgVol", "OpnIntrst", "UndrlygPric"}
     req_mii = {"FinInstrmId", "TckrSymb", "OptnTp", "XpryDt", "StrkPric"}
     if req_bh - set(bh.columns) or req_mii - set(mii.columns): raise ArchiveValidationError("F&O source schema is missing required Phase 1 fields.")
-    n = ((bh.TckrSymb.astype(str).str.upper() == "NIFTY") & bh.OptnTp.astype(str).str.upper().isin(["CE", "PE"])).sum()
-    return {"nifty50_index_date": idx_date.date().isoformat(), "nifty50_ohlc": {"open": o, "high": h, "low": l, "close": c}, "bhavcopy_rows": int(len(bh)), "mii_contract_rows": int(len(mii)), "nifty_option_rows": int(n)}
+    nifty_options = bh[(bh.TckrSymb.astype(str).str.upper() == "NIFTY") & bh.OptnTp.astype(str).str.upper().isin(["CE", "PE"])]
+    underlying = pd.to_numeric(nifty_options["UndrlygPric"], errors="coerce").dropna().unique()
+    if len(underlying) != 1 or abs(float(underlying[0]) - c) > 1e-8:
+        raise ArchiveValidationError("NIFTY option underlying price does not reconcile to the NIFTY 50 daily close.")
+    return {"nifty50_index_date": idx_date.date().isoformat(), "nifty50_ohlc": {"open": o, "high": h, "low": l, "close": c}, "bhavcopy_rows": int(len(bh)), "mii_contract_rows": int(len(mii)), "nifty_option_rows": int(len(nifty_options)), "underlying_close_reconciled": True}
