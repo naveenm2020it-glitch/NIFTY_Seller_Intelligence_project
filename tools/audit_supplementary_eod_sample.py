@@ -101,5 +101,5 @@ def main():
  lines += ["## Limitations",""]+[f"- {x}" for x in data["limitations"]]
  (ROOT/"sample-audit.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
  print(json.dumps({"date":TRADE_DATE,"download_status":{x["name"]:x["status"] for x in results},"audit_file":str(ROOT/"sample-audit.json")},indent=2))
- if not any(x["status"]=="DOWNLOADED" for x in results): raise SystemExit("No official NSE files downloaded; inspect diagnostics.")
+ if not any(x["status"]=="DOWNLOADED" for x in results if x["name"]!="baseline_bhavcopy"): raise SystemExit("No supplementary NSE reports downloaded; baseline Bhavcopy alone does not count as a successful supplementary audit.")
 if __name__=="__main__": main()
