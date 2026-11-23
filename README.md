@@ -33,9 +33,16 @@ A historical, end-of-day (EOD) NIFTY options analysis application built around t
 - `storage/`: Repository placeholder only. Actual historical data must not be committed.
 
 ## Development status
-Phase 0 foundation implementation is on the `phase-0-foundation` branch. It includes FastAPI health endpoints, React/Vite, PostgreSQL connectivity and migration foundation, B2 object-storage adapter, pinned data-science dependencies, tests, Render Blueprint preparation and CI validation.
 
-See [Phase 0 checklist](docs/development/phase-0.md), [setup guide](docs/development/setup.md), [storage guide](docs/storage/README.md), and [remote validation guide](docs/development/remote-validation.md).
+| Phase | Status | Source of truth |
+|---|---|---|
+| Phase 0 — New Repository & Complete Foundation Setup | **Completed** | [Phase 0 checklist](docs/development/phase-0.md) |
+| Phase 1 — Historical EOD Data Audit | **Completed — 23 November 2026** | [Phase 1 closeout](docs/development/phase-1-closeout.md) |
+| Phase 2 — User Configuration & Data Orchestration | Not started | To be specified after Phase 1 closeout |
+
+Phase 1's acquisition and audit tooling was merged into the `phase-1-data-audit` branch in PR [#3](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/3). The merge commit is `e0d0bd435a8367a8ee99e53bdb5a4cb17ad6b63d`. This branch is the Phase 1 implementation baseline; the merge did not deploy the application or upload data to production storage.
+
+See the [Phase 1 closeout](docs/development/phase-1-closeout.md), [Phase 0 checklist](docs/development/phase-0.md), [setup guide](docs/development/setup.md), [storage guide](docs/storage/README.md), and [remote validation guide](docs/development/remote-validation.md).
 
 GitHub Actions runners and PostgreSQL services are temporary validation environments, not a persistent server, database or hosted application. Render configuration is prepared but no deployment has been made.
 
