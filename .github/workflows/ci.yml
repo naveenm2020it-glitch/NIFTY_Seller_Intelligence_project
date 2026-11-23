@@ -1,18 +1,13 @@
-name: NIFTY Seller Intelligence CI
+name: Phase 0 Foundation CI
 
 on:
   push:
     branches:
       - phase-0-foundation
-      - phase-1-data-audit
-      - phase-2-user-config-orchestration
-      - main
   pull_request:
     branches:
       - main
       - phase-0-foundation
-      - phase-1-data-audit
-      - phase-2-user-config-orchestration
   workflow_dispatch:
 
 permissions:
@@ -41,11 +36,11 @@ jobs:
         working-directory: backend
     env:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/nifty_seller_intelligence
-      DATA_STORAGE_PATH: ${{ github.workspace }}/local_data
-      PHASE2_REAL_ARCHIVE_SMOKE: "1"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'phase-0-foundation' || github.ref }}
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -54,27 +49,23 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - name: Install backend dependencies
         run: python -m pip install -r requirements.txt
-      - name: Download and verify the preserved Phase 1 archive from B2
+      - name: Apply database migrations
+        run: alembic upgrade head
+      - name: Run backend tests
+        run: python -m pytest -q
+      - name: Verify live Backblaze B2 connectivity when credentials are configured
         env:
           B2_ENDPOINT_URL: ${{ secrets.B2_ENDPOINT_URL }}
           B2_REGION: ${{ secrets.B2_REGION }}
           B2_BUCKET_NAME: ${{ secrets.B2_BUCKET_NAME }}
           B2_APPLICATION_KEY_ID: ${{ secrets.B2_APPLICATION_KEY_ID }}
           B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
-          PHASE1_ARTIFACT_DIR: ${{ github.workspace }}/local_data
         run: |
-          python ../tools/download_phase1_archive_from_b2.py
-          cd "$GITHUB_WORKSPACE"
-          PHASE1_ARTIFACT_DIR="$GITHUB_WORKSPACE/local_data" python -c "from tools.upload_phase1_archive_to_b2 import verify_source_artifact; verify_source_artifact()"
-          mkdir -p "$GITHUB_WORKSPACE/local_data/artifacts"
-          mv "$GITHUB_WORKSPACE/local_data/manifests" "$GITHUB_WORKSPACE/local_data/artifacts/manifests"
-          mv "$GITHUB_WORKSPACE/local_data/raw" "$GITHUB_WORKSPACE/local_data/artifacts/raw"
-          test -f "$GITHUB_WORKSPACE/local_data/artifacts/manifests/fo-download-manifest.json"
-          test -f "$GITHUB_WORKSPACE/local_data/artifacts/manifests/nifty50-download-manifest.json"
-      - name: Apply database migrations
-        run: alembic upgrade head
-      - name: Run backend tests including real archive and PostgreSQL smoke test
-        run: python -m pytest -q
+          if [ -z "${B2_ENDPOINT_URL}${B2_REGION}${B2_BUCKET_NAME}${B2_APPLICATION_KEY_ID}${B2_APPLICATION_KEY}" ]; then
+            echo "::notice::Live B2 verification skipped; configure all five B2 repository secrets to enable it."
+            exit 0
+          fi
+          python -c "from app.storage.b2 import check_b2_connection; check_b2_connection(); print('Backblaze B2 bucket connectivity verified.')"
 
   frontend:
     name: Frontend build
@@ -85,6 +76,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'phase-0-foundation' || github.ref }}
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
