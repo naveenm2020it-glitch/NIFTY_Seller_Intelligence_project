@@ -7,15 +7,15 @@ from app.core.config import get_database_url
 def get_engine() -> Engine:
     return create_engine(get_database_url(), pool_pre_ping=True)
 
-def get_session_factory() -> sessionmaker[Session]:
-    return sessionmaker(bind=get_engine(), autoflush=False, expire_on_commit=False)
-
 def get_db() -> Generator[Session, None, None]:
-    session = get_session_factory()()
+    engine = get_engine()
+    factory = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+    session = factory()
     try:
         yield session
     finally:
         session.close()
+        engine.dispose()
 
 def check_database_connection() -> bool:
     engine = get_engine()
