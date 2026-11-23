@@ -33,9 +33,16 @@ A historical, end-of-day (EOD) NIFTY options analysis application built around t
 - `storage/`: Repository placeholder only. Actual historical data must not be committed.
 
 ## Development status
-Phase 0 foundation implementation is on the `phase-0-foundation` branch. It includes FastAPI health endpoints, React/Vite, PostgreSQL connectivity and migration foundation, B2 object-storage adapter, pinned data-science dependencies, tests, Render Blueprint preparation and CI validation.
 
-See [Phase 0 checklist](docs/development/phase-0.md), [setup guide](docs/development/setup.md), [storage guide](docs/storage/README.md), and [remote validation guide](docs/development/remote-validation.md).
+| Phase | Status | Source of truth |
+|---|---|---|
+| Phase 0 — New Repository & Complete Foundation Setup | **Completed** | [Phase 0 checklist](docs/development/phase-0.md) |
+| Phase 1 — Historical EOD Data Audit | **Completed — 23 November 2026** | [Phase 1 closeout](docs/development/phase-1-closeout.md) |
+| Phase 2 — User Configuration & Data Orchestration | **In progress — requirements documented; application implementation pending** | [Phase 2 requirements](docs/development/phase-2-user-configuration-and-orchestration.md) |
+
+Phase 1 acquisition and audit tooling, closeout evidence and preservation utilities are integrated into the Phase 2 development branch. The Phase 1 branch history is retained as a parent of the integration commit. This integration does not merge into `main` and does not authorize production deployment.
+
+See the [Phase 1 closeout](docs/development/phase-1-closeout.md), [Phase 1 sample audit](docs/development/phase-1-sample-audit.md), [Phase 2 requirements](docs/development/phase-2-user-configuration-and-orchestration.md), [EOD report inventory review](docs/data/eod-report-inventory-review.md), [Phase 0 checklist](docs/development/phase-0.md), [setup guide](docs/development/setup.md), [storage guide](docs/storage/README.md), and [remote validation guide](docs/development/remote-validation.md).
 
 GitHub Actions runners and PostgreSQL services are temporary validation environments, not a persistent server, database or hosted application. Render configuration is prepared but no deployment has been made.
 

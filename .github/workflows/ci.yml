@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - phase-0-foundation
+      - phase-1-data-audit
       - phase-2-user-config-orchestration
       - main
   pull_request:
     branches:
       - main
       - phase-0-foundation
+      - phase-1-data-audit
       - phase-2-user-config-orchestration
   workflow_dispatch:
 
