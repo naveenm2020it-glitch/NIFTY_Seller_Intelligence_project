@@ -1,4 +1,4 @@
-name: NIFTY Seller Intelligence Phase 2 CI
+name: NIFTY Seller Intelligence CI
 
 on:
   push:
@@ -6,11 +6,13 @@ on:
       - phase-0-foundation
       - phase-1-data-audit
       - phase-2-user-config-orchestration
+      - phase-3-storage-data-processing
       - main
   pull_request:
     branches:
       - main
       - phase-2-user-config-orchestration
+      - phase-3-storage-data-processing
   workflow_dispatch:
 
 permissions:
@@ -18,7 +20,7 @@ permissions:
 
 jobs:
   backend:
-    name: Backend checks
+    name: Backend checks (unit and PostgreSQL migration)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -40,19 +42,52 @@ jobs:
     env:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/nifty_seller_intelligence
       DATA_STORAGE_PATH: ${{ github.workspace }}/local_data
-      PHASE2_REAL_ARCHIVE_SMOKE: "1"
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: backend/requirements.txt
-      - name: Install backend dependencies
-        run: python -m pip install -r requirements.txt
-      - name: Download and verify the preserved Phase 1 archive from B2
+      - run: python -m pip install -r requirements.txt
+      - run: alembic upgrade head
+      - run: alembic downgrade 0002_analysis_runs
+      - run: alembic upgrade head
+      - run: python -m pytest -q --ignore=tests/test_phase2_real_archive_smoke.py
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+
+  historical-archive:
+    name: Phase 1 real archive smoke (optional, B2 Class B cap dependent)
+    runs-on: ubuntu-latest
+    if: ${{ vars.ENABLE_PHASE1_B2_ARCHIVE_CI == 'true' }}
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATA_STORAGE_PATH: ${{ github.workspace }}/local_data
+      PHASE2_REAL_ARCHIVE_SMOKE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: python -m pip install -r requirements.txt
+      - name: Download and verify immutable Phase 1 archive from B2
         env:
           B2_ENDPOINT_URL: ${{ secrets.B2_ENDPOINT_URL }}
           B2_REGION: ${{ secrets.B2_REGION }}
@@ -67,27 +102,5 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/local_data/artifacts"
           mv "$GITHUB_WORKSPACE/local_data/manifests" "$GITHUB_WORKSPACE/local_data/artifacts/manifests"
           mv "$GITHUB_WORKSPACE/local_data/raw" "$GITHUB_WORKSPACE/local_data/artifacts/raw"
-          test -f "$GITHUB_WORKSPACE/local_data/artifacts/manifests/fo-download-manifest.json"
-          test -f "$GITHUB_WORKSPACE/local_data/artifacts/manifests/nifty50-download-manifest.json"
-      - name: Apply database migrations
-        run: alembic upgrade head
-      - name: Run backend tests including real archive and PostgreSQL smoke test
-        run: python -m pytest -q
-
-  frontend:
-    name: Frontend build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - name: Install frontend dependencies
-        run: npm install --no-audit --no-fund
-      - name: Build frontend
-        run: npm run build
+      - run: alembic upgrade head
+      - run: python -m pytest -q

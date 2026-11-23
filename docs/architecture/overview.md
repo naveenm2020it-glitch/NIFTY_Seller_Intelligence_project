@@ -6,10 +6,10 @@ React + Vite frontend communicating with a Python + FastAPI modular monolith thr
 The backend is one deployable application. Its modules have distinct responsibilities and interfaces; they are not separate services.
 
 ## Backend module boundaries
-- `user_config`: analysis date, intended cutoff time, expiry selection and user preferences.
+- `user_config`: Analysis Date, expiry selection and user preferences only; no cutoff-time input.
 - `nse_data`: acquisition of permitted NSE reports and source metadata.
-- `data_validation`: file integrity, required fields, duplicate and completeness checks.
-- `data_processing`: cleaning, normalization and historical data preparation.
+- `data_validation`: source integrity, schema, contract, OHLC, volume/OI and underlying-close validation (Phase 3).
+- `data_processing`: manifest-backed historical normalization and transactional EOD persistence (Phase 3).
 - `feature_engineering`: session-based features for 1, 5 and 22 trading sessions.
 - `analytics`: eight analytical engines, as defined by the approved functional specification.
 - `scenarios`: eight-scenario decision engine.
@@ -23,7 +23,7 @@ The backend is one deployable application. Its modules have distinct responsibil
 2. Validate source files before processing.
 3. Store structured records and analysis metadata in PostgreSQL.
 4. Store raw source archives in a configured B2 bucket when storage is enabled; keep local working files outside version control.
-5. Record analysis inputs, cutoff, expiry, source provenance and software/model versions for reproducibility.
+5. Record Analysis Date, Expiry, source provenance and software/model versions for reproducibility.
 
 ## Operating constraints
 - No mandatory paid hosting, database, storage, market-data or AI service.

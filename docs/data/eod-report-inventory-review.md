@@ -131,3 +131,16 @@ This note does not authorize automated NSE downloads. Phase 1 acquisition was a 
 - Phase 1 row-level audit: `tools/audit_phase1_fo_reports.py` on `phase-1-data-audit`.
 
 **Review conclusion:** retain the audited three-source core; prioritize participant-wise OI as broad-market supplementary context; keep participant volume and volatility optional; use settlement prices primarily for reconciliation; defer FII XLS and zipped/combined reports until current contents are inspected.
+
+
+## 8. Analytical-engine dependency research
+
+The report-to-capability mapping and ingestion tiers are documented separately in [Analytical Engine — EOD Report Dependency Research](analytical-engine-report-dependency-matrix.md).
+
+Key findings:
+- Keep the three audited Phase 3 core reports mandatory.
+- Participant-wise OI is the highest-priority optional report, but it is aggregate index/stock participant context and cannot identify a NIFTY strike's writer.
+- Participant volume, FOVOLT and settlement prices remain optional candidates, not mandatory dependencies.
+- The 03-Jan-2013 technical specification also mentions legacy implied-volatility and traded-volume PCR files. They were not visible in the current public NSE All Reports catalogue reviewed on 23-Nov-2026; treat them as unverified, not current dependencies.
+- The architecture refers to eight analytical engines but does not define their names or contracts. Exact engine-by-engine mapping remains provisional until the approved functional specification is added.
+- No supplementary report is approved for automated acquisition by this research. Current samples, schema, availability, distinct value and permitted acquisition method must be checked first.
