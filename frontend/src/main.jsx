@@ -7,22 +7,22 @@ function App(){
  const [preview,setPreview]=useState(null),[loadingDates,setLoadingDates]=useState(true),[loadingPreview,setLoadingPreview]=useState(false);
  const [starting,setStarting]=useState(false),[run,setRun]=useState(null),[error,setError]=useState("");
  useEffect(()=>{getAnalysisDates().then(v=>{setDates(v);if(v.length)setAnalysisDate(v[v.length-1]);}).catch(e=>setError(e.message)).finally(()=>setLoadingDates(false));},[]);
- useEffect(()=>{if(!analysisDate){setPreview(null);setExpiry("");return undefined;}let cancelled=false;setLoadingPreview(true);setError("");setRun(null);
-  resolveConfiguration(analysisDate,expiry||undefined).then(v=>{if(cancelled)return;setPreview(v);if(!expiry||!v.available_expiries.includes(expiry))setExpiry(v.selected_expiry);})
+ useEffect(()=>{if(!analysisDate){setPreview(null);setExpiryOverride("");return undefined;}let cancelled=false;setLoadingPreview(true);setError("");setRun(null);
+  resolveConfiguration(analysisDate,expiryOverride||undefined).then(v=>{if(cancelled)return;setPreview(v);if(expiryOverride&&!v.available_expiries.includes(expiryOverride))setExpiryOverride("");})
    .catch(e=>{if(!cancelled){setPreview(null);setError(e.message);}}).finally(()=>{if(!cancelled)setLoadingPreview(false);});
   return()=>{cancelled=true;};
- },[analysisDate,expiry]);
+ },[analysisDate,expiryOverride]);
  const canStart=useMemo(()=>Boolean(preview&&!loadingPreview&&!starting),[preview,loadingPreview,starting]);
  async function handleStart(){if(!preview||starting)return;setStarting(true);setError("");setRun(null);
-  try{setRun(await startAnalysis({analysis_date:analysisDate,expiry:expiry||null,idempotency_key:crypto.randomUUID()}));}
+  try{setRun(await startAnalysis({analysis_date:analysisDate,expiry:expiryOverride||null,idempotency_key:crypto.randomUUID()}));}
   catch(e){setError(e.message);}finally{setStarting(false);}}
  return <main className="page">
   <header className="topbar"><div className="brand-mark">NS</div><div><p className="eyebrow">Historical EOD workspace</p><h1>NIFTY Seller Intelligence</h1></div><span className="phase-tag">Phase 2 · Configuration</span></header>
   <section className="intro"><p className="eyebrow">Analysis setup</p><h2>Choose a session. Review the expiry. Start only when ready.</h2><p>Historical NIFTY options data is checked against the preserved Phase 1 archive. Selecting a date or expiry only previews the configuration; it does not start a run.</p></section>
   <section className="panel"><div className="section-heading"><div><p className="eyebrow">01 / Configuration</p><h3>Analysis inputs</h3></div><span className="read-only">EOD only</span></div>
    {loadingDates?<p className="muted">Loading audited sessions…</p>:<div className="field-grid">
-    <label className="field"><span>Analysis date</span><select value={analysisDate} onChange={e=>{setAnalysisDate(e.target.value);setExpiry("");}} disabled={!dates.length}>{dates.map(d=><option key={d} value={d}>{new Date(d+"T00:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}</option>)}</select><small>Only sessions with all three audited source files are listed.</small></label>
-    <label className="field"><span>Expiry</span><select value={expiry} onChange={e=>setExpiry(e.target.value)} disabled={!preview||loadingPreview}>{preview?.available_expiries.map(d=><option key={d} value={d}>{new Date(d+"T00:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}</option>)}</select><small>Nearest available expiry is automatic; another listed expiry can be selected.</small></label>
+    <label className="field"><span>Analysis date</span><select value={analysisDate} onChange={e=>{setAnalysisDate(e.target.value);setExpiryOverride("");}} disabled={!dates.length}>{dates.map(d=><option key={d} value={d}>{new Date(d+"T00:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}</option>)}</select><small>Only sessions with all three audited source files are listed.</small></label>
+    <label className="field"><span>Expiry</span><select value={expiryOverride||preview?.selected_expiry||""} onChange={e=>setExpiryOverride(e.target.value)} disabled={!preview||loadingPreview}>{preview?.available_expiries.map(d=><option key={d} value={d}>{new Date(d+"T00:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}</option>)}</select><small>Nearest available expiry is automatic; another listed expiry can be selected.</small></label>
    </div>}
    {loadingPreview&&<p className="muted">Checking manifests, file integrity and available expiries…</p>}
    {preview&&!loadingPreview&&<div className="review"><div><span className="review-label">Resolved expiry</span><strong>{preview.selected_expiry}</strong></div><span className={preview.expiry_selection_mode==="AUTO"?"mode auto":"mode"}>{preview.expiry_selection_mode==="AUTO"?"Automatic":"Manual selection"}</span>{preview.automatic_fallback&&<p className="notice">{preview.fallback_reason}</p>}</div>}
