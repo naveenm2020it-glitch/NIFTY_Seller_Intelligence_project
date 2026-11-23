@@ -75,6 +75,9 @@ def test_start_persists_run_and_provenance(client):
     assert data["config_snapshot"]["software_versions"]["analytical_models"]=="not-implemented-in-phase-2"
     assert data["config_snapshot"]["automatic_fallback"] is True
     assert any(x["kind"]=="previous_session_mii_contract" for x in data["source_provenance"]["sources"])
+    assert data["source_provenance"]["manifest_validation"]["status"]=="VERIFIED"
+    assert data["source_provenance"]["coverage"]["complete"] is True
+    assert data["stage_results"][-2]["details"]["manifest_integrity_verified"] is True
     assert data["stage_results"][-1]["details"]["analytics_executed"] is False
 
 def test_retry_is_idempotent_and_payload_conflict_rejected(client):
