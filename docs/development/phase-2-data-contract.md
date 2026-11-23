@@ -28,7 +28,7 @@ POST /api/v1/analysis-runs requires a unique idempotency_key. Retrying the same 
 
 ## API
 - GET /api/v1/configuration/analysis-dates — available audited dates.
-- GET /api/v1/configuration/resolve?analysis_date=YYYY-MM-DD[&expiry=YYYY-MM-DD] — read-only preview; no run or data retrieval starts.
+- GET /api/v1/configuration/resolve?analysis_date=YYYY-MM-DD[&expiry=YYYY-MM-DD] — read-only preview of already-staged local archive metadata; no network download or analysis run starts.
 - POST /api/v1/analysis-runs — explicit Start Analysis action.
 - GET /api/v1/analysis-runs/{run_id} — run lifecycle details.
 
