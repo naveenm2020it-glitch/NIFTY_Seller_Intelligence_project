@@ -36,15 +36,16 @@ REPORTS=[
  ("market_activity","F&O - Market Activity Report",f"fo{DDMMYYYY}.zip"),
  ("daily_settlement_prices","F&O - Daily Settlement Prices(csv)",f"FOSett_prce_{DDMMYYYY}.csv"),
 ]
-CATEGORIES=["derivatives","equity-derivatives","futures-and-options","capital-market"]
-SECTIONS=["equities","derivatives","equity-derivatives","futures-and-options"]
+# NSE report catalogue places F&O reports under derivatives / equity-derivatives.
+CATEGORIES=["derivatives"]
+SECTIONS=["equity-derivatives"]
 results=[]
 for key,name,filename in REPORTS:
  attempts=[]; saved=None
  for category in CATEGORIES:
   for section in SECTIONS:
    archive=[{"name":name,"type":"daily-reports","category":category,"section":section}]
-   params={"archives":json.dumps(archive,separators=(",",":")),"date":DATE_LABEL,"type":"equities","mode":"single"}
+   params={"archives":json.dumps(archive,separators=(",",":")),"date":DATE_LABEL,"type":"derivatives","mode":"single"}
    url="https://www.nseindia.com/api/reports?"+urlencode(params)
    try:
     r=S.get(url,timeout=(20,75))
