@@ -9,7 +9,7 @@ class AnalysisRun(Base):
     idempotency_key: Mapped[str] = mapped_column(String(128), unique=True)
     request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     analysis_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
-    selected_expiry: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    selected_expiry: Mapped[date | None] = mapped_column(Date, nullable=True)
     expiry_selection_mode: Mapped[str] = mapped_column(String(10), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     config_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
