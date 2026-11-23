@@ -16,6 +16,7 @@ class ConfigurationPreview(BaseModel):
     fallback_reason: str | None = None
 
 class StartAnalysisRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     analysis_date: date
     expiry: date | None = None
     idempotency_key: str = Field(min_length=8, max_length=128)
