@@ -112,7 +112,7 @@ def _bh_expiry(value: Any) -> date | None:
 
 def _resolve_expiries(day: date, sources: tuple[SourceFile, ...]) -> tuple[list[date], date, SourceFile | None]:
     bh, mii = _read_bhavcopy(sources[0].path), _read_mii(sources[1].path)
-    req_bh = {"TradDt", "FinInstrmId", "TckrSymb", "OptnTp", "XpryDt"}
+    req_bh = {"TradDt", "FinInstrmId", "TckrSymb", "OptnTp", "XpryDt", "StrkPric"}
     req_mii = {"FinInstrmId", "TckrSymb", "OptnTp", "XpryDt", "StrkPric"}
     if req_bh - set(bh.columns) or req_mii - set(mii.columns):
         raise ArchiveValidationError("Contract metadata schema is missing required Bhavcopy/MII fields.")
@@ -121,12 +121,15 @@ def _resolve_expiries(day: date, sources: tuple[SourceFile, ...]) -> tuple[list[
         raise ArchiveValidationError("Bhavcopy trade date does not match requested analysis date.")
     b = bh[(bh.TckrSymb.astype(str).str.upper() == "NIFTY") & bh.OptnTp.astype(str).str.upper().isin(["CE", "PE"])]
     m = mii[(mii.TckrSymb.astype(str).str.upper() == "NIFTY") & mii.OptnTp.astype(str).str.upper().isin(["CE", "PE"])]
-    mapped: dict[str, date] = {}
+    mapped: dict[str, tuple[date, float, str]] = {}
     master_expiries: set[date] = set()
     for row in m.to_dict("records"):
         cid, exp = _id(row.get("FinInstrmId")), _mii_expiry(row.get("XpryDt"))
+        try: strike = float(row.get("StrkPric")) / 100.0
+        except (TypeError, ValueError): strike = None
+        option_type = str(row.get("OptnTp", "")).upper()
         if exp and exp >= day: master_expiries.add(exp)
-        if cid and exp: mapped[cid] = exp
+        if cid and exp and strike is not None: mapped[cid] = (exp, strike, option_type)
     bh_rows = b[["FinInstrmId", "XpryDt"]].to_dict("records")
     bh_ids = {_id(row["FinInstrmId"]) for row in bh_rows}
     missing_ids = {cid for cid in bh_ids if cid and cid not in mapped}
@@ -146,21 +149,34 @@ def _resolve_expiries(day: date, sources: tuple[SourceFile, ...]) -> tuple[list[
                 prior = prior[(prior.TckrSymb.astype(str).str.upper() == "NIFTY") & prior.OptnTp.astype(str).str.upper().isin(["CE", "PE"])]
                 for row in prior.to_dict("records"):
                     cid, exp = _id(row.get("FinInstrmId")), _mii_expiry(row.get("XpryDt"))
-                    if cid in missing_ids and exp:
-                        mapped[cid] = exp
+                    try: strike = float(row.get("StrkPric")) / 100.0
+                    except (TypeError, ValueError): strike = None
+                    option_type = str(row.get("OptnTp", "")).upper()
+                    if cid in missing_ids and exp and strike is not None:
+                        mapped[cid] = (exp, strike, option_type)
                         if exp >= day: master_expiries.add(exp)
                 previous_source = SourceFile("previous_session_mii_contract", prior_day, prior_path, entry)
                 if not (missing_ids - set(mapped)): break
             except ArchiveError:
                 continue
+    unresolved = {cid for cid in bh_ids if cid and cid not in mapped}
+    if unresolved:
+        raise ArchiveValidationError(f"{len(unresolved)} NIFTY option contract IDs could not be reconciled to same-day or previous-session MII.")
     bh_expiries = {_bh_expiry(value) for value in b.XpryDt if _bh_expiry(value)}
     matched_expiries = set()
-    for row in bh_rows:
+    for row in b[["FinInstrmId", "XpryDt", "StrkPric", "OptnTp"]].to_dict("records"):
         cid, bh_exp = _id(row["FinInstrmId"]), _bh_expiry(row["XpryDt"])
-        if cid in mapped and bh_exp and mapped[cid] != bh_exp:
+        mii_exp, mii_strike, mii_type = mapped[cid]
+        try: bh_strike = float(row["StrkPric"])
+        except (TypeError, ValueError): bh_strike = None
+        if bh_exp != mii_exp:
             raise ArchiveValidationError(f"Contract expiry mismatch for instrument ID {cid}.")
-        if cid in mapped and mapped[cid] >= day and mapped[cid] in bh_expiries:
-            matched_expiries.add(mapped[cid])
+        if bh_strike is None or abs(bh_strike - mii_strike) > 1e-8:
+            raise ArchiveValidationError(f"Contract strike mismatch for instrument ID {cid}.")
+        if str(row["OptnTp"]).upper() != mii_type:
+            raise ArchiveValidationError(f"Contract option-type mismatch for instrument ID {cid}.")
+        if mii_exp >= day and mii_exp in bh_expiries:
+            matched_expiries.add(mii_exp)
     available = sorted(matched_expiries)
     if not available:
         raise ArchiveUnavailable("No NIFTY CE/PE expiry is both present in Bhavcopy and reconciled to an MII contract snapshot.")
