@@ -9,14 +9,15 @@
 
 Phase 2 implementation and real-archive verification passed in GitHub Actions.
 
-- **CI run:** [45150719524](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/45150719524) — completed successfully.
+- **Initial real-archive CI run:** [45150719524](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/45150719524) — completed successfully using the retained GitHub artifact.
+- **Durable B2-backed CI run:** [45151719516](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/45151719516) — completed successfully after downloading and verifying the preserved B2 archive. This is the current CI path.
 - **Backend job:** 20 tests passed; one dependency deprecation warning.
 - **Frontend job:** Vite production build passed.
 - **Database:** PostgreSQL 16 service started and Alembic migrations upgraded successfully.
 - **Object storage:** configured Backblaze B2 bucket connectivity check passed.
 - **Historical input:** downloaded the verified Phase 1 workflow artifact (artifact ID `14688805993`, source workflow run `44858251380`) and staged its manifests and raw source files into the documented Phase 2 archive layout. The NSE source files were not modified.
 
-The real-archive smoke test is implemented in `backend/tests/test_phase2_real_archive_smoke.py` and enabled in the Phase 2 CI job. The job downloads the verified artifact, sets `DATA_STORAGE_PATH`, migrates PostgreSQL and exercises the application API.
+The real-archive smoke test is implemented in `backend/tests/test_phase2_real_archive_smoke.py` and enabled in the Phase 2 CI job. The current job downloads the 78-object B2 preservation copy, verifies all 68 raw source files against their SHA-256/byte manifests and rechecks the 15/15 Phase 1 audit, stages the verified archive, sets `DATA_STORAGE_PATH`, migrates PostgreSQL and exercises the application API. The temporary GitHub Actions artifact is no longer a runtime dependency for CI.
 
 ## 2. Real archive API and persistence checks
 
@@ -56,7 +57,7 @@ The following remain intentionally outside Phase 2:
 - No live-market analysis, broker integration, order placement or trade execution.
 - No persistent hosted database, production service or production deployment.
 
-The CI PostgreSQL database was ephemeral and existed only for the test job. No persistent cloud database was created.
+The CI PostgreSQL database was ephemeral and existed only for the test job. No persistent cloud database was created. The B2 archive download is a CI verification step; the application itself still reads an extracted local archive and does not automatically materialize B2 objects.
 
 ## 5. Final disposition
 
