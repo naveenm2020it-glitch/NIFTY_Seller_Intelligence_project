@@ -21,11 +21,9 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.UniqueConstraint("idempotency_key", name="uq_analysis_runs_idempotency_key"))
-    op.create_index("ix_analysis_runs_idempotency_key", "analysis_runs", ["idempotency_key"])
     op.create_index("ix_analysis_runs_analysis_date", "analysis_runs", ["analysis_date"])
     op.create_index("ix_analysis_runs_status", "analysis_runs", ["status"])
 def downgrade() -> None:
     op.drop_index("ix_analysis_runs_status", table_name="analysis_runs")
     op.drop_index("ix_analysis_runs_analysis_date", table_name="analysis_runs")
-    op.drop_index("ix_analysis_runs_idempotency_key", table_name="analysis_runs")
     op.drop_table("analysis_runs")
