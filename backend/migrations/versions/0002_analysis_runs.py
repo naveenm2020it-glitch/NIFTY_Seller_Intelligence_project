@@ -11,7 +11,7 @@ def upgrade() -> None:
         sa.Column("idempotency_key", sa.String(128), nullable=False),
         sa.Column("request_hash", sa.String(64), nullable=False),
         sa.Column("analysis_date", sa.Date(), nullable=False),
-        sa.Column("selected_expiry", sa.Date(), nullable=False),
+        sa.Column("selected_expiry", sa.Date(), nullable=True),
         sa.Column("expiry_selection_mode", sa.String(10), nullable=False),
         sa.Column("status", sa.String(32), nullable=False),
         sa.Column("config_snapshot", sa.JSON(), nullable=False),
