@@ -1,0 +1,38 @@
+name: NSE supplementary report API route probe
+
+on:
+  push:
+    branches:
+      - phase-2-supplementary-report-sample-audit
+    paths:
+      - tools/probe_nse_reports_api.py
+      - .github/workflows/nse-reports-api-probe.yml
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TRADE_DATE: "2026-10-30"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: phase-2-supplementary-report-sample-audit
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependency
+        run: python -m pip install --disable-pip-version-check requests
+      - name: Probe NSE report API route
+        run: python tools/probe_nse_reports_api.py
+      - name: Upload route diagnostics and original files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nse-api-route-probe-2026-10-30
+          path: artifacts/nse-api-route-probe/
+          if-no-files-found: warn
+          retention-days: 14
