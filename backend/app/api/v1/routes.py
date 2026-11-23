@@ -7,6 +7,7 @@ from app.database.session import get_db
 from app.modules.user_config.archive import ArchiveError, ArchiveUnavailable, available_analysis_dates, resolve_configuration
 from app.modules.user_config.orchestration import start_analysis
 from app.modules.user_config.schemas import AnalysisRunResponse, ConfigurationPreview, ExpirySelectionMode, StartAnalysisRequest
+from app.api.v1.processing_routes import router as processing_router
 
 router = APIRouter(prefix="/api/v1", tags=["configuration and orchestration"])
 
@@ -48,3 +49,5 @@ def get_analysis_run(run_id: str, db: Session = Depends(get_db)):
     run = db.scalar(select(AnalysisRun).where(AnalysisRun.id == run_id))
     if run is None: raise HTTPException(status_code=404, detail="Analysis run not found.")
     return _response(run)
+
+router.include_router(processing_router)
