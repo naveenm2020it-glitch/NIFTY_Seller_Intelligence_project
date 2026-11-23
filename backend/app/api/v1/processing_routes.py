@@ -6,7 +6,7 @@ from app.database.session import get_db
 from app.modules.data_processing.schemas import ProcessingResponse
 from app.modules.data_processing.service import get_batch_for_run, process_analysis_run, ProcessingConflict, ProcessingNotReady
 
-router=APIRouter(prefix="/api/v1",tags=["historical data processing"])
+router=APIRouter(tags=["historical data processing"])
 
 def _batch_response(batch):
     return {"id":batch.id,"analysis_run_id":batch.analysis_run_id,"trade_date":batch.trade_date,"selected_expiry":batch.selected_expiry,"status":batch.status,"row_counts":batch.row_counts,"validation_summary":batch.validation_summary,"source_manifest":batch.source_manifest,"error_message":batch.error_message,"created_at":batch.created_at,"completed_at":batch.completed_at}
