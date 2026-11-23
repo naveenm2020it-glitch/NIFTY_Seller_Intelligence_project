@@ -86,31 +86,40 @@ These engine names and boundaries are proposed. They must be reviewed before imp
 
 **Boundaries:** This engine does not decide BUY CE or BUY PE. EOD data does not establish the intraday path.
 
-### Engine 2 — Price Structure and Key Levels
+### Engine 2 — Seller-Based Support, Resistance and Spot Pressure Levels
 
-**Purpose:** Identify NIFTY spot support/resistance references and evaluate the selected EOD observations against them.
+**Purpose:** Identify NIFTY spot support/resistance levels from likely option-seller positioning, then calculate the spot pressure/breakout level at which that positioning may become vulnerable.
 
 **What it will do**
-- Identify S1 and S2 support references and R1 and R2 resistance references from NIFTY 50 historical price structure using a methodology that must be approved.
-- Use historical OHLC observations, prior highs/lows, repeated reaction areas and range structure where supported by the approved method.
-- Assess whether the selected EOD observations indicate approach, test, breakout, breakdown, recovery, rejection, hold or failure.
-- Provide the dates and observations supporting each level.
-- Pass the spot-level state to the scenario engine.
+- Analyse selected-expiry NIFTY CE/PE strike-wise OI, OI changes, volume, premium behaviour and available historical context.
+- Identify likely CE-side seller concentration as candidate resistance (R1/R2) and likely PE-side seller concentration as candidate support (S1/S2), while clearly labelling these as inferred positioning rather than verified seller identity.
+- Rank candidate levels using an approved, versioned method; show the evidence behind each level rather than relying on OI alone.
+- Use NIFTY spot OHLC history to assess whether a seller-derived level is relevant to current market structure and whether the level is approaching, being tested, holding, breaking, recovering or rejecting.
+- Calculate a distinct spot pressure/breakout threshold where the candidate seller positioning may become vulnerable. This threshold is not automatically equal to the option strike.
+- Keep the seller-positioning strike, NIFTY spot support/resistance level and option premium panic-exit trigger as three separately labelled values.
+- Pass the level, evidence and pressure state to Engines 7 and 8.
+
+**Inputs**
+- NIFTY 50 historical EOD OHLC.
+- Selected-expiry NIFTY CE/PE EOD OHLC, OI, volume and contract identity.
+- Historical 1/5/22-session context and approved derived observations.
 
 **Outputs**
-- S1, S2, R1 and R2 spot price levels, or explicitly unavailable.
-- Level type, source observations, supporting dates and method/version.
-- Current spot close and distance from each relevant level.
-- EOD interaction/status, evidence strength and invalidation/reassessment conditions.
+- Seller-derived S1/S2 support and R1/R2 resistance spot levels, or explicitly unavailable.
+- Relevant CE/PE seller-positioning candidate strikes, separately identified from spot levels.
+- Spot pressure/breakout/breakdown threshold and the methodology/version used.
+- Supporting OI, OI change, volume, premium and price-structure evidence.
+- Current NIFTY close, distance to each level, EOD interaction/status and invalidation/reassessment conditions.
+- Evidence strength, data sufficiency and explicit inference limitations.
 
 **Important separation**
-- S1/S2/R1/R2 are NIFTY spot reference levels.
-- Option strike prices are selected separately by Engine 4 for each scenario.
-- Do **not** calculate a resistance/support level by adding an option premium to a CE strike or subtracting a premium from a PE strike.
-- Do **not** present an option strike as the NIFTY spot resistance/support level.
-- The exact spot-level formula, lookback, clustering, evidence and strength criteria remain unapproved and must be historically validated. Do not hardcode arbitrary point distances or levels.
+- CE seller concentration is a resistance candidate; PE seller concentration is a support candidate. Neither is proof of a particular seller's position.
+- A seller-positioning strike, NIFTY spot S/R level and CE/PE premium trigger are not interchangeable.
+- Do **not** calculate NIFTY support/resistance as strike plus CE premium or strike minus PE premium.
+- Do **not** automatically equate the seller strike with the NIFTY spot level; any relationship must be established by the approved calculation and evidence.
+- The exact ranking, level and pressure-threshold formulas, lookbacks, evidence requirements and minimum sample sizes remain unapproved and must be historically validated. Do not invent fixed offsets or arbitrary thresholds.
 
-**Boundaries:** A daily high/low touch does not prove an intraday rejection. The engine must not invent precision or report a weak level as certain.
+**Boundaries:** Daily OHLC cannot prove the intraday order of events or an intraday rejection. OI/volume/premium patterns support an estimate of likely seller positioning; they do not prove seller identity or intent.
 
 ### Engine 3 — Contract OI and Positioning
 
@@ -156,7 +165,9 @@ These engine names and boundaries are proposed. They must be reviewed before imp
 - For **each of the eight scenarios**, independently rank CE contracts and PE contracts.
 - Return Rank 1, Rank 2 and Rank 3 for each side only when eligible contracts satisfy the approved ranking criteria.
 - Identify the side expected to rise and the opposite side expected to fall for that scenario.
-- Calculate the agreed adaptive primary upper premium trigger and opposite lower premium trigger after the formulas are approved.
+- Calculate the adaptive primary upper premium panic-exit trigger for the option side expected to rise and the adaptive opposite lower premium trigger for the side expected to fall, after the formulas are approved.
+- Treat these as estimated levels at which inferred seller positioning may come under pressure; do not describe them as verified seller liquidation.
+- Derive thresholds from comparable historical seller-positioning and price/premium behaviour, not by copying the prior EOD close or applying an arbitrary fixed percentage.
 - Explain why each contract ranked where it did and why alternatives ranked lower.
 
 **Required ranking output for every scenario**
@@ -227,28 +238,31 @@ If fewer than three contracts qualify, show only the qualifying ranks and explai
 - Missing optional reports are unavailable/pending, never zero.
 - This engine is optional to the core analysis and must not block the report if supplementary data is absent.
 
-### Engine 7 — Seller Trap and Setup Detection
+### Engine 7 — Seller Pressure, Panic-Exit Trigger and Setup Detection
 
-**Purpose:** Combine the outputs of Engines 1–6 to identify possible seller traps and explainable option-buyer setups.
+**Purpose:** Combine upstream outputs to estimate when likely option-seller positioning may come under pressure and calculate paired premium trigger levels for a possible option-buyer setup.
 
 **What it will do**
-- Combine market regime, spot structure, contract OI/volume, CE/PE premium behaviour and volatility context.
-- Identify supporting and conflicting evidence.
-- Detect candidate CE-side or PE-side seller-trap situations where available evidence supports the interpretation.
-- Explain why a seller-side position may be vulnerable without claiming knowledge of a specific seller's identity or intent.
-- Produce setup candidates, trigger conditions, invalidation conditions and reasons to avoid a setup.
+- Combine market regime, seller-derived spot levels, contract OI/volume, CE/PE premium behaviour and volatility context.
+- Identify likely seller-pressure candidates and explain the evidence and uncertainty.
+- Calculate an adaptive upper premium trigger for the option side expected to rise and an adaptive lower premium trigger for the opposite side expected to fall, using an approved historical method.
+- Keep the spot breakout/breakdown threshold separate from both option premium thresholds.
+- Apply the agreed Option 2 rule: the spot condition plus the primary option premium trigger are the two required conditions for the initial directional signal; the opposite option premium trigger is additional confirmation.
+- Record whether the primary conditions are met, whether opposite-side confirmation is present, and whether evidence conflicts or invalidation applies.
+- Estimate historical confidence only through a defined and separately validated method. Do not turn an unvalidated score into a probability claim.
 - Permit no-setup/WAIT when evidence is inadequate.
 
 **Outputs**
-- Setup direction: CE, PE or none.
-- Seller-trap candidate and explanation.
-- Relevant spot level and scenario.
-- Selected CE and PE candidate contracts/ranks from Engine 4.
-- Supporting and conflicting evidence.
-- Trigger, invalidation, risk and evidence-sufficiency details.
-- Source and upstream engine versions.
+- Seller-pressure candidate and explanation.
+- Relevant NIFTY spot S/R level and separate spot pressure/breakout threshold.
+- Selected primary option contract, strike, expiry, EOD reference premium and adaptive panic-exit trigger.
+- Selected opposite-side contract, strike, expiry, EOD reference premium and adaptive confirmation trigger.
+- Expected primary premium rise and opposite premium fall.
+- Primary trigger status, additional confirmation status, invalidation and WAIT reasons.
+- Historical confidence estimate, validation sample count/period, success definition, method/version and evidence quality where validated.
+- Supporting/conflicting evidence, data gaps and upstream source/model versions.
 
-**Boundaries:** EOD data cannot prove the intraday sequence or exact moment of a seller trap. High OI or one premium move alone is not proof. No guaranteed-profit or automatic-order claim.
+**Boundaries:** A premium trigger is an estimated seller-pressure/panic-exit threshold, not proof of actual seller liquidation. EOD data cannot observe a live intraday trigger. No guaranteed-profit, guaranteed seller-panic or automatic-order claim.
 
 ### Engine 8 — Eight-Scenario Decision and Consolidated Report
 
@@ -260,8 +274,8 @@ If fewer than three contracts qualify, show only the qualifying ranks and explai
 - Record scenario conditions as met, not met, conflicting, unknown or invalidated.
 - Include scenario-specific CE and PE Rank 1–3 results from Engine 4.
 - Identify which option side is expected to rise and which opposite side is expected to fall.
-- Apply the approved sequential confirmation model.
-- Produce BUY CE, BUY PE or WAIT only according to approved conditions.
+- Apply the approved sequential Option 2 model: spot condition plus primary premium trigger are required for the initial signal; opposite-side premium trigger is additional confirmation.
+- Produce BUY CE, BUY PE or WAIT only according to approved conditions and invalidation/evidence rules.
 - Explain why a scenario qualifies or does not qualify and preserve alternative scenario evidence.
 
 **Outputs**
@@ -269,7 +283,8 @@ If fewer than three contracts qualify, show only the qualifying ranks and explai
 - Scenario-specific CE and PE ranked contract tables.
 - Expected premium direction for both sides.
 - Reference premiums and adaptive triggers, where calculable.
-- Spot-level condition and sequential confirmation stage.
+- Spot-level condition and sequential primary/additional-confirmation stage.
+- Historical confidence/success estimate with numerator, denominator, comparable sample count, validation period and method/version; show unavailable if not validated.
 - Selected setup, entry reference, stop-loss, targets and invalidation only where approved methods and sufficient evidence exist.
 - Final BUY CE, BUY PE or WAIT result with evidence and limitations.
 - Run ID, source provenance and rule/model versions.
@@ -298,46 +313,77 @@ For each scenario, Engine 4 must independently provide:
 - PE Rank 1–3, with strike and EOD reference premium.
 - Expected direction for each side, as specified in the table.
 - Ranking explanation and available OI/volume/premium evidence.
-- Adaptive premium triggers and their status when the approved method can calculate them.
+- Adaptive primary upper panic-exit and opposite lower confirmation triggers, with their separate status.
 - Explicit unavailable status when the data do not support a rank or trigger.
 
 A scenario's primary option is the side expected to rise. The opposite option is the side expected to fall. Both sides must be shown; the system must not show only the recommended BUY side.
 
 ---
 
-## 5. Premium confirmation and sequence
+## 5. Premium panic-exit triggers, Option 2 confirmation and confidence
 
-The previously agreed trigger mode is **both_adaptive**: the primary upper premium trigger and the opposite lower premium trigger are both adaptive. The previously agreed confirmation timing is **sequential**.
+The agreed trigger mode is **both_adaptive**: both the primary upper premium trigger and the opposite lower premium trigger are adaptive. The agreed confirmation timing is **sequential**. The user-approved decision rule is **Option 2**: two primary conditions can generate the initial directional signal; the opposite-side premium condition is additional confirmation, not a mandatory prerequisite for the initial signal.
 
-### 5.1 BUY CE confirmation
+### 5.1 BUY CE — Option 2
 
-1. NIFTY satisfies the applicable upward spot condition (recovery or breakout).
-2. The selected CE premium crosses its adaptive upper trigger.
-3. The selected opposite PE premium falls below its adaptive lower trigger.
-4. The setup is qualified only when all required scenario conditions and invalidation checks are satisfied.
+1. NIFTY crosses the applicable seller-derived upward spot pressure/breakout threshold.
+2. The selected CE premium crosses its adaptive upper panic-exit trigger.
+3. When both primary conditions are met and no invalidation rule applies, the system may issue the initial **BUY CE** signal.
+4. The selected opposite PE premium falling below its adaptive lower trigger is additional confirmation. If it occurs, increase the confirmation/evidence status; do not delay the initial signal solely because this third condition has not yet occurred.
+5. If the primary spot or CE premium condition is absent, conflicting or invalidated, remain WAIT or show the appropriate pending status.
 
-### 5.2 BUY PE confirmation
+### 5.2 BUY PE — reverse Option 2
 
-1. NIFTY satisfies the applicable downward spot condition (breakdown or rejection).
-2. The selected PE premium crosses its adaptive upper trigger.
-3. The selected opposite CE premium falls below its adaptive lower trigger.
-4. The setup is qualified only when all required scenario conditions and invalidation checks are satisfied.
+1. NIFTY crosses the applicable seller-derived downward spot pressure/breakdown threshold.
+2. The selected PE premium crosses its adaptive upper panic-exit trigger.
+3. When both primary conditions are met and no invalidation rule applies, the system may issue the initial **BUY PE** signal.
+4. The selected opposite CE premium falling below its adaptive lower trigger is additional confirmation. If it occurs, increase the confirmation/evidence status; it is not mandatory for the initial signal.
+5. If the primary spot or PE premium condition is absent, conflicting or invalidated, remain WAIT or show the appropriate pending status.
 
-### 5.3 Status values
+### 5.3 Example — illustrative values only
 
-Each stage must be represented as met, not met, unknown or invalidated. The overall result may be pending/partially confirmed, qualified, invalidated or WAIT, according to approved rules.
+For a seller-derived NIFTY resistance/pressure threshold of 25,100:
+- NIFTY spot crosses above 25,100.
+- Selected 25,000 CE crosses its adaptive upper premium trigger of ₹155.
+- These two conditions meet the primary BUY CE rule.
+- Selected 25,150 PE falling below ₹100 is additional confirmation.
 
-**EOD limitation:** The sequence describes the required next-session confirmation plan. This EOD-only application does not observe or confirm live intraday execution of those stages. Retrospective outcome evaluation requires later permitted EOD data.
+The values 25,100, ₹155 and ₹100 are only an illustration of the requested output shape. They are not approved constants, formula outputs or fixed project thresholds.
 
-### 5.4 Trigger formulas not yet approved
+### 5.4 Stage and decision statuses
 
-The following are not yet defined and must not be invented:
+Each condition must be represented as met, not met, unknown or invalidated. The report must distinguish:
+- **WAIT / primary conditions incomplete:** one or both primary conditions are not met or cannot be evaluated.
+- **Primary signal:** spot condition and primary option premium trigger are met, subject to invalidation and evidence-quality rules.
+- **Additional confirmation present:** opposite-side premium trigger is also met.
+- **Invalidated:** an approved invalidation condition is met.
+- **Unavailable:** required data or validated calculation is missing.
+
+The opposite premium confirmation can strengthen the evidence status, but it must not be described as proof that sellers actually liquidated.
+
+### 5.5 Confidence score and 60% reporting requirement
+
+The system may report a historical confidence/success estimate for a seller-pressure level and its premium trigger only when the estimate is supported by a defined historical validation procedure.
+
+- The user's requested reference point is **60% historical confidence**. The application must not automatically assign 60% to a new signal.
+- A displayed 60% means that the exact, pre-defined historical success condition was met in 60% of eligible, comparable validation observations. It is a measured historical rate, not a guarantee, certainty about an individual seller, or a promise of future results.
+- Define the success event before calculating the rate. It must specify the relevant spot condition, selected option premium trigger, opposite-side confirmation outcome (reported separately), observation horizon and invalidation/failure criteria.
+- Show the numerator, denominator, validation date range, comparable-sample count, methodology/version and evidence quality beside the percentage.
+- Keep model fitting/development observations separate from chronological validation observations. Avoid look-ahead leakage and do not count overlapping 22-session windows as independent observations.
+- If there are too few comparable observations, unstable results, missing timestamp granularity or no valid independent validation set, display **insufficient evidence / confidence unavailable** rather than 60%.
+- Report the measured rate even if it is below 60%; do not round or tune a model merely to reach 60%.
+- This is historical pattern/trigger validation, not trade backtesting, paper tracking, live monitoring or automatic trading. No P&L or executable-fill performance claim is implied.
+
+### 5.6 Calculation methods still require approval
+
+Do not invent:
+- Seller concentration and spot pressure-level formulas.
 - Adaptive primary upper premium trigger formula.
 - Adaptive opposite lower premium trigger formula.
-- Lookback weighting and minimum sample requirements.
-- Trigger persistence, tolerance and invalidation rules.
+- Historical comparable-event definition and minimum sample size.
+- Success/failure event, observation horizon and confidence estimator.
+- Trigger persistence, sequence tolerance and invalidation rules.
 - How volatility, OI, volume, moneyness and time-to-expiry contribute to the trigger.
-
 ---
 
 ## 6. Required scenario output layout
@@ -363,8 +409,8 @@ The CE and PE ranks are calculated independently. Rank 1 CE does not have to sha
 - Reference EOD premium for every ranked contract.
 - OI, OI change and volume evidence.
 - Why each contract received its rank.
-- Adaptive CE upper trigger and PE lower trigger, if calculable.
-- Sequential spot/CE/PE condition status.
+- Adaptive primary upper panic-exit trigger and opposite lower confirmation trigger, if calculable.
+- Sequential spot/primary-premium/additional-confirmation status.
 - Selected candidate, entry reference, stop-loss, targets and invalidation if supported by approved methods.
 - Evidence, conflicts, data gaps and reason for BUY CE or WAIT.
 
@@ -402,10 +448,12 @@ For the selected Analysis Date and Expiry, the final report should contain the f
    - Which side is expected to rise and which side is expected to fall.
    - Ranking explanation, adaptive triggers and confirmation status.
 
-5. **Premium confirmation**
-   - Primary upper and opposite lower adaptive triggers.
-   - Trigger methodology/version when approved.
-   - Sequential stage status and invalidation.
+5. **Premium panic-exit confirmation**
+   - Seller-derived spot pressure/breakout threshold.
+   - Selected primary option strike and adaptive upper premium panic-exit trigger.
+   - Opposite option strike and adaptive lower premium confirmation trigger.
+   - Option 2 primary signal status and additional-confirmation status.
+   - Historical confidence/success estimate, numerator/denominator, validation sample count/period, success definition and method/version; unavailable when not validated.
 
 6. **Final decision**
    - BUY CE, BUY PE or WAIT.
@@ -493,7 +541,7 @@ The following remain open and must not be silently assumed:
 8. Approve sequential confirmation persistence, tolerance and invalidation rules.
 9. Approve the EOD evidence definitions for breakdown, recovery, breakout and rejection.
 10. Approve entry-reference, stop-loss and target calculation methods.
-11. Approve confidence/evidence scoring and historical validation requirements.
+11. Approve confidence/evidence scoring, the definition of a successful seller-pressure/premium-trigger event, historical validation period, minimum comparable sample size and reporting method. The requested 60% is a reference level to measure, not a guaranteed or hardcoded score.
 12. Approve the final report layout and whether any outputs should be omitted or added.
 
 All numeric methods and thresholds must be tested on historical data with separate training and validation observations. The 1/5/22-session views are analysis windows, not independent validation samples. Retain the larger archive for validation across market regimes.
@@ -508,5 +556,7 @@ This draft uses:
 - Repository **docs/data/eod-report-inventory-review.md** for the EOD report inventory research and supplementary-report caveats.
 - Repository **docs/development/phase-3-data-contract.md** for the normalized NIFTY 50 and NIFTY CE/PE EOD data contract.
 - The project decisions recorded during requirements review: both premium triggers adaptive, sequential confirmation, user-selected expiry preserved, and eight independent scenario mappings.
+- The user-approved Option 2 rule: NIFTY spot condition plus primary option premium trigger are the two primary conditions; opposite-side premium trigger is additional confirmation.
+- The user-requested 60% confidence reference, represented only as a historical validation result when supported by comparable observations; never as a fixed or guaranteed value.
 
 The source materials do not provide approved formulas, ranking weights, numeric thresholds, final S/R methodology, final engine names or final report dependencies. Those remain open decisions. No application code, schema, migrations, data, report ingestion, deployment or production configuration is changed by this document.
