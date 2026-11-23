@@ -18,7 +18,7 @@ function App(){
   catch(e){setError(e.message);}finally{setStarting(false);}}
  return <main className="page">
   <header className="topbar"><div className="brand-mark">NS</div><div><p className="eyebrow">Historical EOD workspace</p><h1>NIFTY Seller Intelligence</h1></div><span className="phase-tag">Phase 2 · Configuration</span></header>
-  <section className="intro"><p className="eyebrow">Analysis setup</p><h2>Choose a session. Review the expiry. Start only when ready.</h2><p>Historical NIFTY options data is checked against the preserved Phase 1 archive. Selecting a date or expiry only previews the configuration; it does not start a run.</p></section>
+  <section className="intro"><p className="eyebrow">Analysis setup</p><h2>Choose a session. Review the expiry. Start only when ready.</h2><p>Historical NIFTY options data is checked against the preserved Phase 1 archive. Selecting a date or expiry only previews local archive metadata; no download or analysis run starts.</p></section>
   <section className="panel"><div className="section-heading"><div><p className="eyebrow">01 / Configuration</p><h3>Analysis inputs</h3></div><span className="read-only">EOD only</span></div>
    {loadingDates?<p className="muted">Loading audited sessions…</p>:<div className="field-grid">
     <label className="field"><span>Analysis date</span><select value={analysisDate} onChange={e=>{setAnalysisDate(e.target.value);setExpiryOverride("");}} disabled={!dates.length}>{dates.map(d=><option key={d} value={d}>{new Date(d+"T00:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}</option>)}</select><small>Only sessions with all three audited source files are listed.</small></label>
@@ -26,12 +26,12 @@ function App(){
    </div>}
    {loadingPreview&&<p className="muted">Checking manifests, file integrity and available expiries…</p>}
    {preview&&!loadingPreview&&<div className="review"><div><span className="review-label">Resolved expiry</span><strong>{preview.selected_expiry}</strong></div><span className={preview.expiry_selection_mode==="AUTO"?"mode auto":"mode"}>{preview.expiry_selection_mode==="AUTO"?"Automatic":"Manual selection"}</span>{preview.automatic_fallback&&<p className="notice">{preview.fallback_reason}</p>}</div>}
-   <div className="actions"><button onClick={handleStart} disabled={!canStart}>{starting?"Validating…":"Start Analysis"}</button><span className="muted">Changing inputs does not retrieve data or start analysis.</span></div>
+   <div className="actions"><button onClick={handleStart} disabled={!canStart}>{starting?"Validating…":"Start Analysis"}</button><span className="muted">Changing inputs does not download data or start an analysis run.</span></div>
   </section>
   {error&&<div className="error" role="alert"><strong>Unable to continue</strong><span>{error}</span></div>}
   {run&&<section className="panel result"><div className="section-heading"><div><p className="eyebrow">02 / Run record</p><h3>Inputs validated</h3></div><span className="run-status">{run.status.replaceAll("_"," ")}</span></div>
    <dl className="run-grid"><div><dt>Run ID</dt><dd>{run.id}</dd></div><div><dt>Analysis date</dt><dd>{run.analysis_date}</dd></div><div><dt>Selected expiry</dt><dd>{run.selected_expiry} · {run.expiry_selection_mode}</dd></div></dl>
-   <p className="muted">Phase 2 validates and hands off the source set. Analytical processing has not run.</p><ol className="stages">{run.stage_results.map(s=><li key={s.stage}><span>{s.stage.replaceAll("_"," ")}</span><b>{s.status}</b></li>)}</ol>
+   <p className="muted">Phase 2 validates and hands off the source set. Analytical processing has not run.</p>{run.config_snapshot.automatic_fallback&&<p className="notice">{run.config_snapshot.fallback_reason}</p>}<ol className="stages">{run.stage_results.map(s=><li key={s.stage}><span>{s.stage.replaceAll("_"," ")}</span><b>{s.status}</b></li>)}</ol>
   </section>}
   <footer><span>Phase 2 scope · Configuration & orchestration</span><span>No live data · No trading execution</span></footer>
  </main>;
