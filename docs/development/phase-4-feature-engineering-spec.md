@@ -1,6 +1,6 @@
 # Phase 4 — Feature Engineering Specification (Review Draft)
 
-**Status:** Draft for project-owner review; not approved for implementation  
+**Status:** Draft for project-owner review; session-window convention approved; other feature and implementation decisions remain open  
 **Scope:** NIFTY 50 and selected-expiry NIFTY CE/PE historical EOD data  
 **Depends on:** Phase 0–3 foundation and `docs/development/phase-3-data-contract.md`  
 **User inputs:** Analysis Date and selected Expiry only
@@ -47,15 +47,16 @@ Read only the validated Phase 3 records:
 
 ## 3. Session-window contract — important
 
-For a requested window size N (1, 5 or 22), the proposed default is:
-- The window ends on the selected Analysis Date.
-- It contains up to N available trading-date observations, including the Analysis Date.
-- The exact first and last dates and actual observation count are returned.
-- If fewer than N observations exist, the feature is marked partial or unavailable according to its definition; the system must not fabricate history.
+**Approved convention:** For N = 1, 5 or 22, the window contains exactly up to N available trading-date EOD records, including the selected Analysis Date. It is not defined as N complete close-to-close intervals.
 
-**Observation count is not the same as return-interval count.** A window containing 5 daily bars has 4 close-to-close intervals between its first and last bars. A window containing 22 daily bars has 21 such intervals. Every output must report both counts where relevant. If a future requirement means 5 or 22 complete close-to-close intervals, it needs one additional prior close and must be labelled accordingly.
+- 1 session = Analysis Date only.
+- 5 sessions = Analysis Date plus the previous 4 available trading sessions.
+- 22 sessions = Analysis Date plus the previous 21 available trading sessions.
+- The window ends on the selected Analysis Date and uses validated trading-date records, not calendar-day subtraction.
+- Every output reports the actual first/last dates, expected window size and actual observation count.
+- If fewer than N records exist, mark the feature partial or unavailable according to its definition; never fabricate history.
 
-A 1-session feature describes the selected EOD bar. A close-to-close return for that bar still requires the preceding valid trading-session close. If that prior close is absent, return is unavailable.
+**Observation count is not the same as return-interval count.** N EOD records contain N-1 close-to-close intervals between the first and last records. A close-to-close return for the earliest record in a window may require one additional prior closing record. That extra record is a calculation dependency only; it is not counted as part of the N-record window. If it is absent, the relevant return is unavailable.
 
 The 1/5/22 windows are analysis contexts, not independent validation samples. Overlapping windows must never be counted as independent observations for confidence or model validation.
 
@@ -195,7 +196,7 @@ Phase 4 implementation is complete only when all of the following are demonstrat
 
 ## 9. Decisions still requiring project-owner approval
 
-1. Confirm that each N-session window means N EOD observations including the Analysis Date, rather than N complete close-to-close intervals.
+1. **Approved:** Each N-session window means N EOD observations including the Analysis Date, not N complete close-to-close intervals.
 2. Approve the proposed spot feature list and percentage denominators.
 3. Approve the proposed option feature list and the exact contract continuity key.
 4. Approve the spot/strike distance convention and whether/when ITM/ATM/OTM labels are needed.
