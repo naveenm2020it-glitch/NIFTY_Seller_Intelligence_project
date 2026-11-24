@@ -22,14 +22,14 @@ React + Vite frontend; Python + FastAPI modular monolith; PostgreSQL; optional B
 | Phase 2 — User Configuration & Data Orchestration | Completed | docs/development/phase-2-closeout.md |
 | Phase 3 — Storage & Data Processing | Completed | docs/development/phase-3-closeout.md |
 | Phase 4 — Feature Engineering | Pending — specification under review | docs/development/phase-4-feature-engineering-spec.md |
-| Phase 5 — Eight Analytical Engines | Pending — functional specification draft under review | docs/architecture/eight-analytical-engines-functional-spec-draft.md |
-| Phase 6 — Eight-Scenario Decision Engine | Pending — requirements included in the draft specification | docs/architecture/eight-analytical-engines-functional-spec-draft.md |
+| Phase 5 — Eight Analytical Engines | Pending — functional specification draft under review | PR #7 (draft) |
+| Phase 6 — Eight-Scenario Decision Engine | Pending — requirements included in PR #7 draft | PR #7 (draft) |
 | Phase 7 — Four ML Models | Pending | To be specified after feature/engine validation |
 | Phase 8 — Complete Web Dashboard | Pending | To be specified |
 | Phase 9 — QA & Production Readiness | Pending | To be specified |
 | Phase 10 — Feedback & Continuous Pattern Learning | Pending | To be specified |
 
-Phase 1 and Phase 2 were integrated into `main` through merged PR [#5](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/5). Phase 3 was integrated through merged PR [#6](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/6). Phase completion does not authorize production deployment.
+Phase 1 and Phase 2 were integrated into `main` through merged PR [#5](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/5). Phase 3 was integrated through merged PR [#6](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/6). The eight-engine/eight-scenario functional specification is still in [draft PR #7](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/7); it is not approved or implemented. Phase completion does not authorize production deployment.
 
 ## Phase 2 implementation boundary
 The API and frontend provide analysis-date selection, automatic nearest available expiry, manual expiry override, explicit Start Analysis, idempotent run records, source-manifest provenance and checksum/schema validation. `READY_FOR_PROCESSING` means only that inputs are validated for a later phase; no analytics are executed. The application reads an extracted local Phase 1 archive and does not automate NSE collection. See the Phase 2 data contract for archive layout and API details.
@@ -38,7 +38,7 @@ The API and frontend provide analysis-date selection, automatic nearest availabl
 Phase 3 adds manifest-verified, read-only parsing of the three audited core reports; NIFTY 50 and selected-expiry NIFTY CE/PE normalization; contract reconciliation; validation; PostgreSQL persistence; processing/status/read APIs; provenance; idempotency; source-conflict detection and retryable failures. Standard backend/synthetic archive tests, PostgreSQL migration upgrade/downgrade/re-upgrade tests and frontend build passed. The real B2 archive integration was skipped because of the account's AccessDenied/Class B transaction cap; it is not claimed as passed. See the Phase 3 closeout and data contract.
 
 ## Phase 4 boundary
-Phase 4 is Feature Engineering (1/5/22-session descriptive features). Its specification is a review draft; formulas, window semantics, feature schema and persistence/API choices require approval before implementation. The separate eight-engine/eight-scenario document is a functional requirements draft for later Phases 5–6, not Phase 4 implementation.
+Phase 4 is Feature Engineering (1/5/22-session descriptive features). Its specification is a review draft; formulas, window semantics, feature schema and persistence/API choices require approval before implementation. The separate eight-engine/eight-scenario document describes proposed requirements for later Phases 5–6, not Phase 4 implementation.
 
 ## Security and operations
 Keep credentials in an untracked .env or secret store. Never commit credentials or raw market archives. B2 remains optional; Phase 3 does not claim automatic application-side B2 archive materialization. The application still requires an extracted local archive. Automatic NSE collection is not implemented. No production deployment is authorized.
