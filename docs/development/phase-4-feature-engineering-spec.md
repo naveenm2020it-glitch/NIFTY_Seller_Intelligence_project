@@ -350,3 +350,37 @@ The project owner approved the following two descriptive open-interest (OI) move
 - OI change describes the change in outstanding open contracts only. It does not independently establish buyer/seller identity, fresh writing, unwinding, long buildup, short buildup, seller dominance or a trading signal.
 - Logarithmic OI change and symmetric percentage OI change are not approved Phase 4 features. They remain outside the approved catalogue unless separately reviewed.
 
+### 10.8 Owner-approved CE/PE volume features
+
+The project owner approved the following descriptive volume features for the Phase 4 CE/PE contract feature catalogue:
+
+| Feature | Definition | Review status |
+|---|---|---|
+| Absolute volume change | Current EOD traded volume minus the immediately preceding validated trading-session EOD traded volume for the exact same contract | Approved |
+| Percentage volume change (%) | (Current EOD traded volume / immediately preceding validated trading-session EOD traded volume - 1) × 100 | Approved |
+| Volume/OI ratio | Current EOD traded volume / current EOD open interest for the exact same contract and date | Approved |
+| Total volume | Sum of valid observed EOD traded volume within the selected 1-, 5- or 22-session context | Approved |
+| Average daily volume | Total valid observed EOD traded volume divided by the number of valid volume observations in the selected context | Approved |
+
+#### 1/5/22-session context
+
+- **Daily changes:** Calculate absolute and percentage volume change for each available EOD observation against the immediately preceding validated trading-session observation for the exact same contract. For the 1-session context, the prior observation is a calculation dependency outside the window and is not counted as a window observation.
+- **Volume/OI ratio:** Calculate for each available EOD observation using that date's volume and OI for the exact same contract. Preserve the daily ratio observations in the 1-, 5- and 22-session contexts. No additional window average or aggregate ratio is approved.
+- **Total volume:** Sum valid observed volume within each 1-, 5- or 22-session context.
+- **Average daily volume:** Divide the context's total valid observed volume by its actual number of valid volume observations, not by calendar days or an assumed number of sessions.
+- Report the expected window size, actual valid volume observation count and calculation status. If one or more expected contract observations are missing, a total or average based on the remaining valid observations must be marked partial and must not be presented as a complete-window result. If no valid volume observations exist, the result is unavailable.
+- For a complete window, total volume is the sum across all expected valid contract observations and average daily volume is that total divided by the number of observations in the window. In a 1-session complete window, total and average daily volume both equal that session's volume.
+
+#### Calculation and continuity safeguards
+
+- Calculate each feature separately for the exact contract identity: NIFTY underlying, selected expiry, strike, option type and instrument ID.
+- Use the immediately preceding validated trading-session volume observation for daily changes. If that adjacent session's contract observation is missing, mark the daily change unavailable; do not bridge the gap or substitute another contract.
+- A valid zero-volume observation must be preserved and included in window totals and observation counts. Missing volume is not zero.
+- Absolute volume change remains calculable when previous volume is zero, provided both current and previous volume observations are valid.
+- Percentage volume change is unavailable when previous volume is zero or missing. Do not emit infinity or substitute zero.
+- Volume/OI ratio is unavailable when current OI is zero or missing, or when current volume is missing. A valid zero-volume observation with positive valid OI produces a valid ratio of zero.
+- Do not bridge missing contract observations. Preserve actual observation counts, partial/unavailable status and continuity/missing-session flags.
+- Retain source volume and OI observations unchanged and preserve trade-date, contract identity and source provenance.
+- Volume and Volume/OI ratio describe recorded traded quantity relative to open interest. They do not independently establish buyer/seller identity, fresh writing, unwinding, long buildup, short buildup, seller dominance or a trading signal.
+- Logarithmic volume change, symmetric percentage volume change, volume moving average as a separate indicator, cumulative volume as a separate feature and relative-volume indicators are not approved in this section. They remain outside the Phase 4 catalogue unless separately reviewed.
+
