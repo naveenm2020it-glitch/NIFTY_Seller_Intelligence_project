@@ -2,7 +2,7 @@
 
 **Status date:** 25 November 2026  
 **Canonical source:** This file and the README on the repository's `main` branch.  
-**Current verified `main` HEAD at this status update:** `33611d549206444355fcd72687fb410bf763b1ff`.
+**Current verified `main` HEAD at this status update:** `9f0435f6cbb8002ed03d0cfb143893c1609ee87b`.
 
 ## Source-of-truth rule
 
@@ -56,6 +56,12 @@ Update this file whenever a phase is completed, a pull request is merged, or a p
 - Verified 22 AnalysisRuns reached `PROCESSED`, 22 ingestion batches reached `COMPLETED`, all 22 NIFTY 50 daily bars were persisted, selected-expiry CE/PE option rows were persisted and readable through the API, and each option underlying close reconciled to the NIFTY 50 close.
 - The test passed: 1 passed in 240.83 seconds. This used the preserved GitHub artifact, not a B2 download; it does not change the separate B2 smoke-test limitation.
 - The PostgreSQL database was temporary CI infrastructure. This does not establish persistent hosted-database coverage or a production data load.
+
+### Phase 3 full 22-session archive validation — PRs #14 and #15
+- PR [#14](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/14), merge commit `9f0435f6cbb8002ed03d0cfb143893c1609ee87b`, integrated the opt-in real-archive Phase 3 test and its closeout/status evidence.
+- PR [#15](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/15), merge commit `98bfdc6f0b2c7b3959a20e5084d08be943c185d2`, supplied the one-time branch-scoped workflow job used to execute the test against the preserved Phase 1 artifact.
+- Successful real-archive test: [GitHub Actions run #45547427122](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/45547427122). All 22 audited sessions were processed and persisted in temporary PostgreSQL 16; 22 AnalysisRuns and batches, 22 index bars, selected-expiry CE/PE readback and underlying-close reconciliation passed.
+- The temporary branch-specific artifact-download job is removed after this one-time verification; the opt-in test remains in the repository. The archived GitHub artifact is not a permanent CI dependency.
 
 ### Phase 4 specification — PR #8
 - PR: [#8](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/8)
