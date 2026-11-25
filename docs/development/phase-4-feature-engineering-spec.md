@@ -254,6 +254,41 @@ The following remain open and must not be treated as approved merely because the
 - Feature output schema, persistence format and idempotency key.
 - Backend-only output versus a read-only preview/API.
 
+### 10.6 Owner-approved CE/PE premium range and candle features
+
+The project owner approved the following six descriptive features for the Phase 4 CE/PE contract feature catalogue:
+
+| Feature | Definition | Review status |
+|---|---|---|
+| Intraday premium range | High premium - Low premium | Approved |
+| Premium range percentage | (High premium - Low premium) / immediately preceding validated trading-session closing premium × 100 | Approved |
+| Premium candle body points | Closing premium - Opening premium | Approved |
+| Premium candle body percentage | (Closing premium - Opening premium) / Opening premium × 100 | Approved |
+| Premium candle body ratio | (Closing premium - Opening premium) / (High premium - Low premium) | Approved |
+| Premium Close Location Value (CLV) | ((Closing premium - Low premium) - (High premium - Closing premium)) / (High premium - Low premium) | Approved |
+
+#### Calculation and continuity safeguards
+
+- Calculate each feature separately for the exact contract identity: NIFTY underlying, selected expiry, strike, option type and instrument ID.
+- Preserve original source OHLC values unchanged.
+- Premium range percentage requires a valid, non-zero immediately preceding validated trading-session closing premium for the same contract. If unavailable, the result is unavailable; do not bridge missing contract sessions.
+- Premium candle body percentage is unavailable when opening premium is missing or zero.
+- Premium candle body ratio and CLV are unavailable when High equals Low.
+- Do not replace unavailable results with zero. Preserve valid observed zero premiums.
+- These features describe the contract's EOD premium candle; they do not independently establish seller identity, fresh writing, unwinding, seller dominance or a trading signal.
+
+#### True Range — candidate only
+
+True Range is retained as a candidate for a separate convention review, not as an approved implementation feature:
+
+`TR_t = max(H_t - L_t, |H_t - P_{t-1}|, |L_t - P_{t-1}|)`
+
+Here, H and L are the current contract's EOD high and low premiums, and P is the immediately preceding validated trading-session closing premium for that exact same contract. The convention, continuity requirements and treatment of missing prior observations must be reviewed before approval.
+
+#### ATR — pending
+
+Average True Range (ATR), including any 5- or 22-session version, remains pending and is not approved for the Phase 4 feature catalogue. Its averaging convention, window semantics, minimum valid observations and missing-session treatment require a separate review.
+
 ### 10.5 Owner-approved CE/PE premium movement features
 
 The project owner approved the following two descriptive premium movement features for the Phase 4 catalogue:
