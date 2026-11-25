@@ -48,12 +48,26 @@ Update this file whenever a phase is completed, a pull request is merged, or a p
 - **Real B2 archive integration was not passed in the Phase 3 run.** It was skipped/blocked by AccessDenied and the account's Class B transaction cap. Do not report this as a successful real-archive Phase 3 integration test.
 - See [Phase 3 closeout](phase-3-closeout.md).
 
+### Phase 3 real archive end-to-end validation — run #45547427122
+- Downloaded the immutable Phase 1 GitHub Actions artifact ID `14688805993` from run `44858251380`; the downloaded ZIP SHA-256 matched the recorded artifact digest.
+- Reverified all 68 raw source files against their manifests and confirmed the Phase 1 audit remains 15/15.
+- Applied the Phase 3 Alembic migration to a temporary PostgreSQL 16 CI database.
+- Ran the opt-in real-archive Phase 3 API test across all 22 audited trading dates, 21-Oct-2026 through 19-Nov-2026.
+- Verified 22 AnalysisRuns reached `PROCESSED`, 22 ingestion batches reached `COMPLETED`, all 22 NIFTY 50 daily bars were persisted, selected-expiry CE/PE option rows were persisted and readable through the API, and each option underlying close reconciled to the NIFTY 50 close.
+- The test passed: 1 passed in 240.83 seconds. This used the preserved GitHub artifact, not a B2 download; it does not change the separate B2 smoke-test limitation.
+- The PostgreSQL database was temporary CI infrastructure. This does not establish persistent hosted-database coverage or a production data load.
+
 ### Phase 4 specification — PR #8
 - PR: [#8](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/8)
 - Merge commit: `300c3f5d577231672b6ad458740752d10a1b19ff`
 - Merged README roadmap corrections, the Phase 4 Feature Engineering design draft and this canonical status reference.
 - PR #8 CI passed for backend/PostgreSQL migration checks and frontend build. The optional real B2 archive smoke test was skipped due to the known access/transaction-cap limitation.
 - This merge integrates documentation only. It does not complete Phase 4 or authorize its implementation.
+
+### Canonical status and Phase 3 closeout corrections — PRs #11 and #12
+- PR [#11](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/11), merge commit `d10027ee8c3398fb366eb279388d695ff0c0fe8a`, corrected the recorded `main` baseline after PR #10.
+- PR [#12](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/12), merge commit `33611d549206444355fcd72687fb410bf763b1ff`, corrected the Phase 3 closeout to record its actual PR #6 integration.
+- Both were documentation-only changes; their GitHub Actions checks passed.
 
 ## Approved decisions and pending approvals
 
@@ -94,6 +108,6 @@ No unapproved formula, threshold, weight, confidence score or model behavior may
 
 ## Current next step
 
-Phase 4 implementation is the next development phase, but its feature definitions and implementation choices are not yet approved. Before writing Phase 4 code, first verify that the required historical 1/5/22 EOD records are actually persisted and queryable: Phase 3 processing is session-oriented, so do not assume the full 22-session window is already present in PostgreSQL. If history is missing, define and approve a safe historical loading approach before implementing features.
+Phase 4 implementation is the next development phase, but its feature definitions and implementation choices are not yet approved. The real-archive Phase 3 CI test proves that all 22 audited sessions can be processed and persisted in a temporary PostgreSQL 16 database. It does not prove that those rows exist in a persistent hosted database. Before Phase 4 implementation, verify coverage in the intended persistent database if one is approved and provisioned; do not treat temporary CI data as persistent project data.
 
 PR #9 remains a separate draft requirements document for Phases 5–6 and must not be treated as approved implementation scope.
