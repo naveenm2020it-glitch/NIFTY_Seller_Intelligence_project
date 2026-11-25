@@ -141,6 +141,7 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - run: python -m pip install -r requirements.txt
+      - run: python -m pip install boto3
       - name: Download immutable Phase 1 audit artifact from GitHub Actions
         uses: actions/download-artifact@v4
         with:
