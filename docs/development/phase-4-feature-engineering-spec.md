@@ -384,3 +384,35 @@ The project owner approved the following descriptive volume features for the Pha
 - Volume and Volume/OI ratio describe recorded traded quantity relative to open interest. They do not independently establish buyer/seller identity, fresh writing, unwinding, long buildup, short buildup, seller dominance or a trading signal.
 - Logarithmic volume change, symmetric percentage volume change, volume moving average as a separate indicator, cumulative volume as a separate feature and relative-volume indicators are not approved in this section. They remain outside the Phase 4 catalogue unless separately reviewed.
 
+### 10.9 Owner-approved CE/PE volume-weighted premium return
+
+The project owner approved Volume-Weighted Premium Return (VWPR) as a descriptive CE/PE premium–volume relationship feature for 5- and 22-session contexts only.
+
+For a selected context of N observations:
+
+`VWPR_N = sum(R_t × V_t) / sum(V_t)`
+
+Where:
+- `R_t` is the daily simple premium return in percentage points for the exact same contract: `(P_t / P_(t-1) - 1) × 100`.
+- `V_t` is the current session's valid EOD traded volume for that exact same contract.
+- `N` is 5 or 22 validated EOD observations, including the Analysis Date.
+
+VWPR is the volume-weighted average of the daily simple premium returns in the selected window. It is not the cumulative premium return across the window and must not be labelled as such.
+
+#### Window and calculation rules
+
+- Calculate VWPR independently for each exact contract identity: NIFTY underlying, selected expiry, strike, option type and instrument ID. Never combine CE and PE, different strikes or different expiries.
+- Calculate daily premium return using the immediately preceding validated trading-session closing premium for the same contract. For the earliest observation in a 5- or 22-session window, the preceding close is a calculation dependency outside the window and is not counted as a window observation.
+- VWPR is available only when all N daily premium returns and their corresponding EOD volume observations are valid and the sum of volume across the window is greater than zero. If any required return or volume observation is missing, or if total volume is zero, mark VWPR unavailable; do not silently calculate a complete-window result from a reduced subset.
+- A valid zero-volume observation remains part of the window and its daily return must be valid, but it contributes zero weight to the numerator and denominator. Missing volume is not zero.
+- Preserve the daily premium returns and volume observations used in the calculation, along with expected and actual observation counts, first/last dates and calculation status.
+- Use full calculation precision internally. Presentation rounding remains an output-schema decision.
+
+#### Interpretation limits
+
+- VWPR describes the volume-weighted average of observed daily premium returns for one exact contract over the selected historical window.
+- A positive or negative VWPR does not establish whether buyers or sellers initiated the trades, identify participant positions, prove fresh writing or unwinding, or establish seller dominance or a trading signal.
+- VWPR is not actual traded turnover. Do not calculate turnover as EOD closing premium multiplied by reported volume.
+- Pearson correlation, Spearman correlation, premium-change-times-volume, log-volume relationships, turnover proxies and additional premium–volume indicators are not approved by this decision. They remain outside the Phase 4 catalogue unless separately reviewed.
+- VWPR is not defined for the 1-session context; retain the already-approved daily premium return and volume features separately for that context.
+
