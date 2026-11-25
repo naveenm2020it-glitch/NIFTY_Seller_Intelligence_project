@@ -2,7 +2,7 @@
 
 **Status date:** 25 November 2026  
 **Canonical source:** This file and the README on the repository's `main` branch.  
-**Current verified `main` HEAD before this status update:** `8abbc8d125507d13ec42dde5ffec3ad81f3cbc18`.
+**Current verified `main` HEAD at this status update:** `300c3f5d577231672b6ad458740752d10a1b19ff`.
 
 ## Source-of-truth rule
 
@@ -18,7 +18,7 @@ Update this file whenever a phase is completed, a pull request is merged, or a p
 | 1 | Historical EOD Data Audit | **Completed and integrated** | [Phase 1 closeout](phase-1-closeout.md); integrated with Phase 2 through PR [#5](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/5), merge commit `82fcb219748e35ef22ab9fb51d71fd111b2d32de`. |
 | 2 | User Configuration & Data Orchestration | **Completed and integrated** | [Phase 2 closeout](phase-2-closeout.md); PR [#5](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/5), merge commit `82fcb219748e35ef22ab9fb51d71fd111b2d32de`. |
 | 3 | Storage & Data Processing | **Completed and integrated** | [Phase 3 closeout](phase-3-closeout.md); PR [#6](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/6), merge commit `8abbc8d125507d13ec42dde5ffec3ad81f3cbc18`. |
-| 4 | Feature Engineering | **Pending implementation; specification documented, feature decisions still open** | [Phase 4 specification](phase-4-feature-engineering-spec.md). PR [#8](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/8) contains documentation only. |
+| 4 | Feature Engineering | **Specification merged; implementation pending** | [Phase 4 specification](phase-4-feature-engineering-spec.md), merged through PR [#8](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/8), merge commit `300c3f5d577231672b6ad458740752d10a1b19ff`. Documentation only; feature decisions and implementation remain pending. |
 | 5 | Eight Analytical Engines | **Pending** | Requirements draft in PR [#9](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/9); not approved or implemented. |
 | 6 | Eight-Scenario Decision Engine | **Pending** | Requirements draft in PR [#9](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/9); not approved or implemented. |
 | 7 | Four ML Models | **Pending** | Requires validated upstream features and approved model requirements. |
@@ -47,6 +47,13 @@ Update this file whenever a phase is completed, a pull request is merged, or a p
 - Standard backend/synthetic archive tests, PostgreSQL migration upgrade/downgrade/re-upgrade tests and frontend build passed.
 - **Real B2 archive integration was not passed in the Phase 3 run.** It was skipped/blocked by AccessDenied and the account's Class B transaction cap. Do not report this as a successful real-archive Phase 3 integration test.
 - See [Phase 3 closeout](phase-3-closeout.md).
+
+### Phase 4 specification — PR #8
+- PR: [#8](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/8)
+- Merge commit: `300c3f5d577231672b6ad458740752d10a1b19ff`
+- Merged README roadmap corrections, the Phase 4 Feature Engineering design draft and this canonical status reference.
+- PR #8 CI passed for backend/PostgreSQL migration checks and frontend build. The optional real B2 archive smoke test was skipped due to the known access/transaction-cap limitation.
+- This merge integrates documentation only. It does not complete Phase 4 or authorize its implementation.
 
 ## Approved decisions and pending approvals
 
