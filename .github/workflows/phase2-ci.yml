@@ -16,6 +16,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
@@ -104,3 +105,53 @@ jobs:
           mv "$GITHUB_WORKSPACE/local_data/raw" "$GITHUB_WORKSPACE/local_data/artifacts/raw"
       - run: alembic upgrade head
       - run: python -m pytest -q
+
+  phase3-preserved-archive:
+    name: Phase 3 real archive — 22-session PostgreSQL persistence smoke
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' && github.head_ref == 'test/phase3-full-archive-smoke' }}
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nifty_seller_intelligence
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d nifty_seller_intelligence"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/nifty_seller_intelligence
+      DATA_STORAGE_PATH: ${{ github.workspace }}/local_data
+      PHASE3_REAL_ARCHIVE_SMOKE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: python -m pip install -r requirements.txt
+      - name: Download retained Phase 1 source artifact from GitHub Actions
+        uses: actions/download-artifact@v4
+        with:
+          name: phase1-nse-fo-index-download-and-diagnostics
+          repository: ${{ github.repository }}
+          run-id: 44858251380
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: ${{ github.workspace }}/phase1-artifact
+      - name: Stage verified source archive in the Phase 1 application layout
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/local_data/artifacts"
+          mv "$GITHUB_WORKSPACE/phase1-artifact/manifests" "$GITHUB_WORKSPACE/local_data/artifacts/manifests"
+          mv "$GITHUB_WORKSPACE/phase1-artifact/raw" "$GITHUB_WORKSPACE/local_data/artifacts/raw"
+      - run: alembic upgrade head
+      - name: Process and read all 22 audited sessions through Phase 3 APIs
+        run: python -m pytest -q -s tests/test_phase3_real_archive_smoke.py
