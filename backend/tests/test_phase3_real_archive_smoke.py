@@ -2,6 +2,7 @@
 
 This exercises every audited trading date through the real API and a temporary PostgreSQL database.
 """
+import math
 import os
 from uuid import uuid4
 
@@ -75,7 +76,7 @@ def test_phase3_processes_all_22_verified_sessions_into_postgres():
             assert payload["option_rows"]
             assert all(str(row["expiry"]) == selected_expiry for row in payload["option_rows"])
             assert {row["option_type"] for row in payload["option_rows"]} == {"CE", "PE"}
-            assert all(row["underlying_close"] == payload["index_bar"]["close"] for row in payload["option_rows"])
+            assert all(math.isclose(row["underlying_close"], payload["index_bar"]["close"], rel_tol=0, abs_tol=1e-8) for row in payload["option_rows"])
             processed_runs.append(run["id"])
 
         assert len(processed_runs) == 22
