@@ -1,6 +1,6 @@
 # Phase 4 — Feature Engineering Specification (Review Draft)
 
-**Status:** Review draft; session-window convention and the NIFTY spot formula decisions listed in Section 10 have been owner-approved; remaining definitions and implementation decisions remain open  
+**Status:** Design decisions reviewed and owner-approved as recorded in Sections 3 and 10; physical database schema, migrations, exact API contract and implementation remain pending  
 **Scope:** NIFTY 50 and selected-expiry NIFTY CE/PE historical EOD data  
 **Depends on:** Phase 0–3 foundation and `docs/development/phase-3-data-contract.md`  
 **User inputs:** Analysis Date and selected Expiry only
@@ -62,7 +62,7 @@ The 1/5/22 windows are analysis contexts, not independent validation samples. Ov
 
 ## 4. Proposed feature groups
 
-The following are proposed descriptive features. Their definitions and output schema require project-owner review before implementation. No decision thresholds are implied.
+The following are descriptive feature groups. Formula and design approvals are recorded in Section 10; any item not explicitly approved remains pending. No decision thresholds are implied.
 
 ### 4.1 NIFTY 50 spot features
 
@@ -83,7 +83,7 @@ For each 1/5/22 observation window, where sufficient data exists:
 - Window range in points and percentage, with the denominator explicitly recorded.
 - Mean daily range and the underlying observation count.
 
-Realized-volatility estimators may be added only after the estimator, return convention, annualization and minimum-observation rules are approved. FOVOLT is not part of the core Phase 4 input contract and must not be treated as NIFTY option IV.
+Yang–Zhang realized volatility is approved for NIFTY 50 spot OHLC in the 5- and 22-session contexts under Section 10.2. It is a historical spot-volatility feature, not option implied volatility. FOVOLT is not part of the core Phase 4 input contract and must not be treated as NIFTY option IV.
 
 ### 4.2 CE/PE contract features
 
@@ -111,10 +111,9 @@ Do not calculate a multi-session premium return across different strikes, option
 Candidate contextual fields:
 - Selected expiry, strike, option type and instrument ID for each source observation.
 - Analysis-date NIFTY spot close.
-- Spot-to-strike distance as a numeric value, with its exact formula and units recorded.
+- Spot-to-strike distance in points and percentage, using the Analysis Date NIFTY spot close and each selected-expiry strike, under the formulas in Section 10.11.
+- ITM/ATM/OTM classification using the standard call/put moneyness rules and nearest-listed-strike ATM convention in Section 10.11.
 - Calendar days to expiry, calculated from the Analysis Date and selected expiry.
-
-The ITM/ATM/OTM classification boundaries remain unapproved. Store the numeric spot/strike relationship first; do not invent an ATM band or silently assign a moneyness class.
 
 ### 4.4 Cross-engine 1/5/22 coverage
 
@@ -162,7 +161,7 @@ Each feature result should be traceable to:
 
 A proposed feature-set summary should record the feature-definition version, input source hashes, number of index observations, number of option-contract observations, window coverage and validation summary.
 
-The final persistence format and any database migration are not approved by this document. Prefer to finalize the feature schema and idempotency key before creating new tables or changing the API contract.
+The logical feature-record contract and deterministic idempotency identity are approved in Section 10.11. The physical persistence design, database tables, migrations and exact read-only API request/response contract remain implementation-level decisions and must be reviewed before any schema or API change.
 
 ## 7. Acceptance criteria for Phase 4
 
@@ -189,23 +188,31 @@ Phase 4 implementation is complete only when all of the following are demonstrat
 2. Confirm the exact Phase 3 repository paths, data-access functions and Analysis Run lifecycle to reuse.
 3. Implement pure, deterministic feature calculations without mutating Phase 3 data.
 4. Add unit tests for calculations, continuity, missingness and window boundaries.
-5. Add service/API integration and persistence only after the feature output schema and idempotency rules are approved.
+5. Implement the approved logical feature-record contract and idempotency rules; finalize and review physical persistence and API contracts before database or API changes.
 6. Add a small read-only feature preview only if required; do not build the full dashboard in this phase.
 7. Validate outputs against hand-calculated fixtures and the preserved historical archive where access is available.
 8. Close Phase 4 with test evidence and a versioned feature contract.
 
-## 9. Decisions still requiring project-owner approval
+## 9. Decision status and remaining implementation reviews
 
-1. **Approved:** Each N-session window means N EOD observations including the Analysis Date, not N complete close-to-close intervals.
-2. Approve the proposed spot feature list and percentage denominators.
-3. Approve the proposed option feature list and the exact contract continuity key.
-4. Approve the spot/strike distance convention and whether/when ITM/ATM/OTM labels are needed.
-5. Approve any realized-volatility estimator and annualization method.
-6. Approve feature output schema, storage format and idempotency key.
-7. Confirm whether Phase 4 needs an API/UI preview or only a backend feature artifact.
-8. Confirm permitted source/data-use scope before any supplementary report is added.
+The following design decisions have been owner-approved and are detailed in Section 10:
+1. N-session windows contain N validated EOD observations including the Analysis Date.
+2. The reviewed NIFTY spot and CE/PE feature formulas and their continuity/denominator safeguards.
+3. Yang–Zhang volatility for NIFTY 50 spot OHLC only, using the approved 5/22-session conventions.
+4. CE/PE True Range and SMA-based ATR (5/22), including exact-contract continuity rules.
+5. Spearman OI–premium correlation only when all 22 paired observations are valid in the 22-session context.
+6. Feature-specific display precision, with full precision retained internally.
+7. Spot-to-strike distance in points and percentage, plus standard ITM/ATM/OTM classification.
+8. The logical structured feature-record contract and versioned deterministic upsert identity.
+9. Backend feature calculation with a read-only API; no full dashboard/UI in Phase 4.
+10. Missing contract observations invalidate only affected contract features/windows, not the entire Analysis Run.
 
-Until these decisions are approved, this document is a design draft only. No code, schema, migration, data, report acquisition, deployment or production configuration is changed by this specification.
+The following implementation/source-governance items remain open and are not authorized by these design decisions:
+- Physical database persistence design, table definitions and migrations.
+- Exact read-only API endpoints, payload schemas, permissions and integration details.
+- Permitted source/data-use scope before any supplementary report or data source is introduced. Phase 4 remains restricted to validated Phase 3 records unless separately approved.
+
+Until implementation-level reviews are completed, this document remains a design specification. It does not authorize application-code changes, database schema changes, migrations, data mutation, report acquisition, deployment or production-configuration changes.
 
 
 ## 10. Owner-reviewed NIFTY spot formula decisions
@@ -283,15 +290,12 @@ The value 252 is the approved project annualization convention; it is not an int
 
 Yang–Zhang is a historical spot-volatility estimator that incorporates overnight opening gaps and intraday OHLC information. It measures realized historical variability, not market direction or future movement. It does not identify buyers or sellers, establish fresh writing or unwinding, demonstrate seller dominance, or independently create a setup, ranking or trading signal.
 
-### 10.3 Decisions still open within the feature catalogue
+### 10.3 Remaining implementation-level decisions
 
-The following remain open and must not be treated as approved merely because the spot formulas above were approved:
-- The full CE/PE contract feature catalogue and exact continuity key.
-- Spot-to-strike distance formula and units, and any ITM/ATM/OTM classification.
-- Window-summary denominator and aggregation conventions where not explicitly defined above.
-- Yang–Zhang estimator parameters and validity rules.
-- Feature output schema, persistence format and idempotency key.
-- Backend-only output versus a read-only preview/API.
+The feature formulas and logical design decisions approved in Section 10 are not pending. The following implementation details remain open and require review before implementation:
+- Physical database persistence design, table/column definitions, indexes and migrations.
+- Exact read-only API routes, request/response schemas, permissions and integration details.
+- Any supplementary source/data-use scope beyond validated Phase 3 records; no supplementary report acquisition or ingestion is authorized by this specification.
 
 ### 10.6 Owner-approved CE/PE premium range and candle features
 
@@ -316,17 +320,32 @@ The project owner approved the following six descriptive features for the Phase 
 - Do not replace unavailable results with zero. Preserve valid observed zero premiums.
 - These features describe the contract's EOD premium candle; they do not independently establish seller identity, fresh writing, unwinding, seller dominance or a trading signal.
 
-#### True Range — candidate only
+#### Owner-approved True Range
 
-True Range is retained as a candidate for a separate convention review, not as an approved implementation feature:
+The project owner approved True Range (TR) as a daily descriptive CE/PE premium-range feature:
 
 `TR_t = max(H_t - L_t, |H_t - P_{t-1}|, |L_t - P_{t-1}|)`
 
-Here, H and L are the current contract's EOD high and low premiums, and P is the immediately preceding validated trading-session closing premium for that exact same contract. The convention, continuity requirements and treatment of missing prior observations must be reviewed before approval.
+Here, `H_t` and `L_t` are the current exact contract's EOD high and low premiums, and `P_(t-1)` is the immediately preceding validated trading-session closing premium for that same exact contract.
 
-#### ATR — pending
+- Calculate TR independently for each exact contract identity: NIFTY underlying, selected expiry, strike, option type and instrument ID.
+- The immediately preceding validated trading-session close is required. If that contract observation is missing, TR is `UNAVAILABLE`; do not bridge the gap or substitute another contract.
+- Preserve valid observed zero premiums. Missing values are not zero.
+- Use the validated Phase 3 OHLC values without modifying the source observations.
+- TR is expressed in premium points (₹) and is descriptive only; it does not identify sellers, prove writing/unwinding or create a trading signal.
 
-Average True Range (ATR), including any 5- or 22-session version, remains pending and is not approved for the Phase 4 feature catalogue. Its averaging convention, window semantics, minimum valid observations and missing-session treatment require a separate review.
+#### Owner-approved Average True Range (ATR) — SMA (5/22)
+
+The project owner selected the Simple Moving Average (SMA) convention for CE/PE ATR in the 5- and 22-session contexts:
+
+`ATR_N = (TR_1 + TR_2 + ... + TR_N) / N`, where `N` is 5 or 22.
+
+- Calculate ATR separately for each exact contract identity and each window; never combine strikes, option types or expiries.
+- The window contains exactly N validated EOD observations including the Analysis Date, consistent with Section 3. The first TR in the window may require the immediately preceding validated session close outside the window; that close is a calculation dependency and is not counted in N.
+- ATR is available only when all N required TR values are valid. If any required TR is unavailable because of a missing contract observation or missing prior close, the ATR is `UNAVAILABLE`; do not calculate from a reduced subset or label a partial average as a complete ATR.
+- Preserve the expected and actual TR observation counts, first/last dates, contract identity, source provenance and unavailable reason.
+- Retain full calculation precision internally. Display precision follows the feature-specific presentation rule in Section 10.11.
+- ATR is a historical premium-range summary, not a directional forecast, seller-identification method or trading signal.
 
 ### 10.5 Owner-approved CE/PE premium movement features
 
@@ -455,6 +474,82 @@ VWPR is the volume-weighted average of the daily simple premium returns in the s
 - Pearson correlation, Spearman correlation, premium-change-times-volume, log-volume relationships, turnover proxies and additional premium–volume indicators are not approved by this decision. They remain outside the Phase 4 catalogue unless separately reviewed.
 - VWPR is not defined for the 1-session context; retain the already-approved daily premium return and volume features separately for that context.
 
+### 10.11 Owner-approved remaining Phase 4 design decisions
+
+#### Feature display precision
+
+- Retain full calculation precision internally; do not round or overwrite stored calculation values for presentation.
+- Display decimal precision is feature-specific and should be selected according to the feature's units, scale and report/UI readability. There is no single fixed decimal-place rule for every feature.
+- Apply rounding only at the presentation boundary. The presentation layer may choose the appropriate number of decimal places for each feature without changing the underlying stored value.
+
+#### Spot-to-strike distance
+
+For each selected-expiry contract, using the Analysis Date NIFTY spot close:
+
+- Distance in points: `Spot Close - Strike Price`.
+- Distance percentage: `((Spot Close - Strike Price) / Spot Close) × 100`.
+- A missing or zero Spot Close makes the percentage distance unavailable; preserve the points value only when both Spot Close and Strike Price are valid.
+- Retain the signed values. Do not convert the distance into an absolute value in the stored feature.
+- These are descriptive context features, not standalone trading signals.
+
+#### ITM / ATM / OTM classification
+
+Use the standard option moneyness convention for the selected expiry and Analysis Date:
+
+| Classification | CE (Call) | PE (Put) |
+|---|---|---|
+| ITM | Spot Close > Strike | Spot Close < Strike |
+| ATM | Strike is the nearest listed strike to Spot Close | Strike is the nearest listed strike to Spot Close |
+| OTM | Spot Close < Strike | Spot Close > Strike |
+
+- Determine the nearest listed strike from the valid listed strikes available for the selected expiry and Analysis Date; do not introduce a fixed arbitrary ATM point band.
+- If Spot Close exactly equals a listed strike, that strike is ATM.
+- If Spot Close is exactly midway between two nearest listed strikes, mark both as ATM candidates; do not arbitrarily select one.
+- Apply the ITM/OTM comparison separately for CE and PE to all other strikes.
+- If the required spot close or selected-expiry strike universe is unavailable, classification is unavailable with a reason.
+- Moneyness is descriptive contract context only. It does not establish premium value, seller identity or a trading signal.
+
+#### Logical feature output record
+
+Each calculated feature is represented as its own structured feature record, rather than placing all features into one undifferentiated JSON result. The logical record includes:
+
+- Feature name and feature-definition version.
+- Feature value, where available.
+- Calculation status: `AVAILABLE`, `PARTIAL`, `UNAVAILABLE` or `INVALID`.
+- Analysis Run ID, Analysis Date and selected Expiry.
+- Context window (1, 5 or 22 sessions), where applicable.
+- Exact contract identity (NIFTY underlying, expiry, strike, option type and instrument ID), where applicable; spot-level features do not require a contract identity.
+- Expected and actual observation counts, plus first/last source dates where applicable.
+- Source references and provenance, including source hashes/row references required to reproduce the calculation.
+- Calculation parameters and missingness/quality reason when the result is partial, unavailable or invalid.
+
+This is the approved logical output contract. Physical database table design, column types, indexes and migrations remain subject to implementation review.
+
+#### Versioned deterministic upsert and history preservation
+
+- Use a deterministic record identity composed of Analysis Run ID, feature-definition version, feature name, contract identity when applicable, Analysis Date and context window.
+- Reprocessing the same logical feature under the same identity must upsert the existing record rather than create a duplicate.
+- A new feature-definition version must create a separately identifiable result; do not overwrite or delete results produced by an earlier feature-definition version.
+- Preserve source provenance and calculation parameters with each record so that a result can be traced and reproduced.
+- Spot-level features omit contract identity from the identity components; contract-level features include the full exact contract identity.
+- This defines logical idempotency behaviour only; it does not authorize a database migration or dictate a physical storage implementation.
+
+#### Phase 4 delivery boundary
+
+- Implement feature calculations in a backend feature engine.
+- Expose calculated feature results through a read-only API.
+- Do not build the full dashboard/UI as part of Phase 4; later dashboard work may consume the read-only API.
+- Exact API routes, request/response schemas, authentication/permissions and integration details remain implementation-level design work and must be reviewed before implementation.
+- This boundary does not authorize live/intraday data, broker connectivity, order execution, alerts, paper trading or backtesting.
+
+#### Missing contract observation handling
+
+- A contract row absent for a required trading date is a missing observation, never a zero-valued observation.
+- Mark only the affected contract feature or feature window as `UNAVAILABLE` when its required observations are incomplete.
+- Continue calculating other contracts and unaffected features normally; one missing contract observation must not reject the entire Analysis Run.
+- Do not bridge missing sessions, forward-fill, interpolate or substitute another strike, option type, expiry or instrument.
+- Preserve the missing date, exact contract identity, expected/actual observation counts and the reason for unavailability.
+
 ### 10.10 Owner-approved CE/PE OI–premium relationship analysis
 
 The project owner approved Spearman Rank Correlation as the selected descriptive method for examining the relationship between daily percentage OI change and daily simple premium return for an exact CE/PE contract.
@@ -472,8 +567,8 @@ Where:
 
 - **1-session context:** Do not calculate a correlation coefficient. Retain the Analysis Date's daily percentage OI change and daily simple premium return as separate features, subject to their existing validity rules.
 - **5-session context:** Preserve the date-aligned valid OI-change/premium-return pairs and report their count and coverage. Do not calculate or publish a 5-session correlation coefficient; five observations are too few to support a useful relationship assessment.
-- **22-session context:** Spearman Rank Correlation is the selected relationship statistic. It may be calculated only when the separately approved minimum valid paired-observation requirement is met. That minimum is not defined by this approval and must be settled before implementation. Do not invent a minimum or silently treat all 22 dates as valid pairs.
-- Report expected dates, actual valid paired-observation count, first/last paired dates, coverage status and any missing-pair reasons alongside the statistic. If the 22-session context is incomplete but the approved minimum is met, identify the result as partial and disclose the actual pair count; never label it a complete 22-pair result.
+- **22-session context:** Calculate Spearman Rank Correlation only when all 22 expected date-aligned OI-change/premium-return pairs are valid (22/22). If even one pair is missing or invalid, the 22-session coefficient is `UNAVAILABLE`; do not calculate from a reduced subset or publish a partial coefficient.
+- Report the expected pair count (22), actual valid paired-observation count, first/last paired dates, coverage status and missing-pair reasons alongside the statistic. The prior-session OI and premium observations needed to calculate the first pair remain dependencies outside the 22-observation window.
 
 #### Pairing, continuity and calculation safeguards
 
