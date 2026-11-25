@@ -246,37 +246,37 @@ The project owner approved the Yang–Zhang volatility estimator for **NIFTY 50 
 
 #### Approved estimator and parameters
 
-For a window containing (n) validated EOD observations, where (n=5) or (n=22), use the following Yang–Zhang estimator:
+For a window containing \(n\) validated EOD observations, where \(n=5\) or \(n=22\), use the following Yang–Zhang estimator:
 
-- (O_i,H_i,L_i,C_i) are the NIFTY 50 spot open, high, low and close for observation (i).
-- (C_{i-1}) is the immediately preceding validated trading-session close. For the first observation in the selected window, this close is a calculation dependency outside the window and is not counted among its (n) observations.
+- \(O_i,H_i,L_i,C_i\) are the NIFTY 50 spot open, high, low and close for observation \(i\).
+- \(C_{i-1}\) is the immediately preceding validated trading-session close. For the first observation in the selected window, this close is a calculation dependency outside the window and is not counted among its \(n\) observations.
 - Use natural logarithms:
-  - Opening-gap return: (o_i=\ln(O_i/C_{i-1}))
-  - Close-to-open return: (c_i=\ln(C_i/O_i))
-  - Rogers–Satchell term: (RS_i=\ln(H_i/C_i)\ln(H_i/O_i)+\ln(L_i/C_i)\ln(L_i/O_i))
-- Calculate the sample variances of the opening-gap and close-to-open returns using divisor (n-1):
-  - (V_o=\operatorname{SampleVar}(o_1,\ldots,o_n))
-  - (V_c=\operatorname{SampleVar}(c_1,\ldots,c_n))
-- Calculate the mean Rogers–Satchell term using divisor (n):
-  - (V_{RS}=\frac{1}{n}\sum_{i=1}^{n}RS_i)
-- Use α = 1.34 and calculate the estimator weight separately for each window size:
-  - (k=\frac{0.34}{1.34+\frac{n+1}{n-1}})
+  - Opening-gap return: \(o_i=\ln(O_i/C_{i-1})\)
+  - Close-to-open return: \(c_i=\ln(C_i/O_i)\)
+  - Rogers–Satchell term: \(RS_i=\ln(H_i/C_i)\ln(H_i/O_i)+\ln(L_i/C_i)\ln(L_i/O_i)\)
+- Calculate the sample variances of the opening-gap and close-to-open returns using divisor \(n-1\):
+  - \(V_o=\operatorname{SampleVar}(o_1,\ldots,o_n)\)
+  - \(V_c=\operatorname{SampleVar}(c_1,\ldots,c_n)\)
+- Calculate the mean Rogers–Satchell term using divisor \(n\):
+  - \(V_{RS}=\frac{1}{n}\sum_{i=1}^{n}RS_i\)
+- Use \(\alpha=1.34\) and calculate the estimator weight separately for each window size:
+  - \(k=\frac{0.34}{1.34+\frac{n+1}{n-1}}\)
 - Combine the components:
-  - (V_{YZ}=V_o+kV_c+(1-k)V_{RS})
+  - \(V_{YZ}=V_o+kV_c+(1-k)V_{RS}\)
 - Use 252 trading sessions per year as the project's annualization convention:
-  - Annualized Yang–Zhang volatility (%) (=\sqrt{252\times V_{YZ}}\times100)
+  - Annualized Yang–Zhang volatility (%) \(=\sqrt{252\times V_{YZ}}\times100\)
 
-The value (252) is the approved project annualization convention; it is not an intrinsic constant of the Yang–Zhang estimator. Retain full calculation precision internally and present the annualized result as a percentage per annum. Display rounding remains governed by the feature output/presentation specification.
+The value 252 is the approved project annualization convention; it is not an intrinsic constant of the Yang–Zhang estimator. Retain full calculation precision internally and present the annualized result as a percentage per annum. Display rounding remains governed by the feature output/presentation specification.
 
 #### Window completeness and input validation
 
 - Calculate the estimator only for complete 5- or 22-observation windows, including the Analysis Date, under the Phase 4 session-window contract. Do not calculate a partial-window Yang–Zhang result.
-- All (n) OHLC observations and the immediately preceding validated session close required for the first opening-gap return must be present and valid. If any required observation or dependency is missing, the entire window's Yang–Zhang result is unavailable; do not bridge a gap, reduce the sample, forward-fill or interpolate.
-- All required OHLC prices and the preceding close must be positive. Each bar must satisfy (H_i\geq\max(O_i,C_i)) and (L_i\leq\min(O_i,C_i)). Invalid source data must not be repaired in Phase 4; surface the invalidity and preserve the Phase 3 validation boundary.
-- Use (n=5) for the 5-session estimator and (n=22) for the 22-session estimator when calculating (k). Do not substitute the number of return intervals or a different sample count.
+- All \(n\) OHLC observations and the immediately preceding validated session close required for the first opening-gap return must be present and valid. If any required observation or dependency is missing, the entire window's Yang–Zhang result is unavailable; do not bridge a gap, reduce the sample, forward-fill or interpolate.
+- All required OHLC prices and the preceding close must be positive. Each bar must satisfy \(H_i\geq\max(O_i,C_i)\) and \(L_i\leq\min(O_i,C_i)\). Invalid source data must not be repaired in Phase 4; surface the invalidity and preserve the Phase 3 validation boundary.
+- Use \(n=5\) for the 5-session estimator and \(n=22\) for the 22-session estimator when calculating \(k\). Do not substitute the number of return intervals or a different sample count.
 - The prior close before the first window observation is a calculation dependency only. It does not increase the window observation count.
 - If the required window or dependency is incomplete or invalid, report the feature as unavailable with its missingness/quality reason. Do not replace the result with zero or publish a partial estimate.
-- Preserve the estimator components, window size, calculated (k), annualization factor, observation dates, prior-close dependency, input validity and calculation status so the result can be reproduced from the validated source data.
+- Preserve the estimator components, window size, calculated \(k\), annualization factor, observation dates, prior-close dependency, input validity and calculation status so the result can be reproduced from the validated source data.
 - Do not calculate Yang–Zhang volatility for CE/PE option premiums under this approval. Any option-premium volatility estimator requires a separate review and approval.
 
 #### Interpretation limits
