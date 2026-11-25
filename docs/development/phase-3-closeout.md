@@ -26,7 +26,19 @@ GitHub Actions run: https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelli
 - PostgreSQL migration upgrade to head again: successful.
 - Frontend build: successful.
 - Existing Phase 0–2 tests are included in the backend suite and passed in this run.
-- Phase 1 real B2 archive job: skipped by explicit opt-in gate. An earlier attempt returned Backblaze AccessDenied because the account's Class B download/transaction cap was exceeded. Actual archive smoke is therefore not revalidated in this Phase 3 run; Phase 1 archived provenance and its previously passed audit remain unchanged.
+- The optional Phase 1 real B2 archive job was skipped by its explicit opt-in gate. An earlier attempt returned Backblaze AccessDenied because the account's Class B download/transaction cap was exceeded. No successful B2 download is claimed for this standard Phase 3 CI run.
+
+## Real archive Phase 3 end-to-end validation
+GitHub Actions run: [#45547427122](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/45547427122)
+
+- Downloaded the immutable Phase 1 GitHub Actions artifact ID `14688805993` from source run `44858251380`; GitHub verified the artifact ZIP SHA-256 against its recorded digest.
+- Reverified all 68 raw source files against the source manifests; all 15 Phase 1 audit checks remained true.
+- Applied the Phase 3 Alembic migration to a temporary PostgreSQL 16 CI database.
+- Ran `backend/tests/test_phase3_real_archive_smoke.py` with `PHASE3_REAL_ARCHIVE_SMOKE=1` across all 22 audited sessions from 21-Oct-2026 through 19-Nov-2026.
+- The test created and processed 22 AnalysisRuns; verified 22 `PROCESSED` runs, 22 `COMPLETED` ingestion batches, 22 persisted NIFTY 50 bars, selected-expiry CE/PE option rows for every date, API readback, and underlying-close reconciliation.
+- Result: **1 passed** in 240.83 seconds (one dependency deprecation warning).
+- This was an artifact-based integration test, not a B2 integration test. The optional B2 smoke-test limitation above remains.
+- PostgreSQL was ephemeral CI infrastructure. No persistent Render database coverage or production data load is claimed.
 
 ## Scope safeguards
 - Original raw source bytes are not modified.
@@ -38,4 +50,4 @@ GitHub Actions run: https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelli
 - The PostgreSQL instance used by GitHub Actions is temporary CI infrastructure. This validation does not prove that historical Phase 3 rows have been loaded into or audited in a persistent Render database.
 
 ## Status
-**PHASE 3 IMPLEMENTATION AND STANDARD CI VALIDATION COMPLETED — 23 NOVEMBER 2026.** The Phase 3 code is merged into `main`; backend/unit tests, PostgreSQL migration upgrade/downgrade/re-upgrade checks and frontend build passed. The optional real B2 archive smoke test was skipped/blocked and is not claimed as passed. Persistent hosted-database coverage remains unverified; no production deployment or persistent data load is claimed.
+**PHASE 3 IMPLEMENTATION AND VALIDATION COMPLETED — 23 NOVEMBER 2026.** The Phase 3 code is merged into `main`; standard backend/unit tests, PostgreSQL migration upgrade/downgrade/re-upgrade checks and frontend build passed. The separate artifact-based real-archive integration test then processed all 22 audited sessions into temporary PostgreSQL and passed. The optional real B2 archive smoke test remains skipped/blocked and is not claimed as passed. Persistent hosted-database coverage remains unverified; no production deployment or persistent data load is claimed.
