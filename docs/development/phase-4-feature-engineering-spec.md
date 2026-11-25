@@ -185,7 +185,7 @@ Phase 4 implementation is complete only when all of the following are demonstrat
 
 ## 8. Dependencies and implementation order
 
-1. Approve the session-window semantics and proposed feature catalog.
+1. Confirm the approved session-window semantics and approve the proposed feature catalog.
 2. Confirm the exact Phase 3 repository paths, data-access functions and Analysis Run lifecycle to reuse.
 3. Implement pure, deterministic feature calculations without mutating Phase 3 data.
 4. Add unit tests for calculations, continuity, missingness and window boundaries.
