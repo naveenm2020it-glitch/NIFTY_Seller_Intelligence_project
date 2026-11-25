@@ -216,7 +216,7 @@ The following NIFTY spot features were approved during the project-owner review 
 |---|---|---|
 | Close-to-close point change | Current close minus immediately preceding available validated trading-session close | Approved |
 | Simple close-to-close return | (Current close / previous close - 1) × 100 | Approved |
-| Log close-to-close return | ln(Current close / previous close) × 100 | Approved |
+| Log close-to-close return | ln(Current close / previous close), stored as a decimal log return; multiply by 100 only when a percentage-form display is required | Approved — representation refined |
 | Intraday range | High - Low | Approved |
 | Intraday range percentage | (High - Low) / previous close × 100 | Approved |
 | Candle body points | Close - Open | Approved |
@@ -233,10 +233,11 @@ The following NIFTY spot features were approved during the project-owner review 
 - Approved daily features are calculated for the available EOD observations represented by the 1-, 5- and 22-session contexts, subject to each feature's required prior observation and denominator.
 - The N-session context remains N available validated EOD observations including the Analysis Date. It is not N return intervals.
 - Close-to-close change, simple return, log return and opening gap require the immediately preceding available validated trading-session close. If it is missing, the affected result is unavailable. A required prior close outside the N-session window is a dependency only and is not counted in that window.
-- Simple return and percentage features are unavailable when their denominator is missing or zero. Log return is unavailable unless both closes are valid and positive.
+- Simple return and percentage features are unavailable when their denominator is missing or zero. Store log return as the decimal value ln(Current close / previous close); convert to percentage form by multiplying by 100 only at the presentation boundary. Log return is unavailable unless both closes are valid and positive.
 - Candle body ratio and CLV are unavailable when High equals Low. Do not replace unavailable results with zero.
-- Williams %R is unavailable when the relevant lookback does not contain a valid high/low range or its highest high equals its lowest low. Do not invent thresholds or overbought/oversold labels.
-- Retain full calculation precision internally. Output rounding and display precision remain an output-schema decision.
+- Calculate Williams %R separately for each observation using only that observation and its preceding available validated trading-session records within the specified 5- or 22-session lookback. Never use later observations from the Analysis Date window to calculate an earlier row. Williams %R is unavailable until the required lookback is available or when its highest high equals its lowest low. Do not invent thresholds or overbought/oversold labels.
+- Retain full calculation precision internally. Store log returns as decimal values; percentage display is a presentation conversion (× 100), not a separate underlying calculation. Output rounding and display precision remain an output-schema decision.
+- Calculate rolling indicators such as Williams %R independently at each historical observation using only data available up to that observation, preventing look-ahead leakage.
 - Keep original OHLC values unchanged and retain provenance for every derived value.
 
 ### 10.2 Yang–Zhang volatility decision
