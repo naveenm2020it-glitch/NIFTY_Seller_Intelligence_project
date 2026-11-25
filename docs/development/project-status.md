@@ -2,7 +2,7 @@
 
 **Status date:** 25 November 2026  
 **Canonical source:** This file and the README on the repository's `main` branch.  
-**Current verified `main` HEAD at this status update:** `33611d549206444355fcd72687fb410bf763b1ff`.
+**Verified `main` baseline for this status update:** `9f0435f6cbb8002ed03d0cfb143893c1609ee87b`.
 
 ## Source-of-truth rule
 
