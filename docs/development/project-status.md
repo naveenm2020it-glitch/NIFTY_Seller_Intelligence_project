@@ -2,7 +2,7 @@
 
 **Status date:** 25 November 2026  
 **Canonical source:** This file and the README on the repository's `main` branch.  
-**Current verified `main` HEAD at this status update:** `348008e1efeaac429a0d7a5f9c87840670bbaa4b`.
+**Verified `main` baseline for this status update:** `98bfdc6f0b2c7b3959a20e5084d08be943c185d2`.
 
 ## Source-of-truth rule
 
@@ -47,6 +47,12 @@ Update this file whenever a phase is completed, a pull request is merged, or a p
 - Standard backend/synthetic archive tests, PostgreSQL migration upgrade/downgrade/re-upgrade tests and frontend build passed.
 - **Real B2 archive integration was not passed in the Phase 3 run.** It was skipped/blocked by AccessDenied and the account's Class B transaction cap. Do not report this as a successful real-archive Phase 3 integration test.
 - See [Phase 3 closeout](phase-3-closeout.md).
+
+### Full 22-session archived-artifact integration — PR #15
+- PR: [#15](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/15), merge commit `98bfdc6f0b2c7b3959a20e5084d08be943c185d2`.
+- CI run [45547427122](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/actions/runs/45547427122) verified all 68 raw files against byte-size/SHA-256 manifests and confirmed the Phase 1 audit remained 15/15.
+- All 22 audited sessions were processed through the Phase 2/3 APIs in ephemeral PostgreSQL 16; 22 AnalysisRuns, 22 completed ingestion batches, 22 NIFTY 50 bars and all selected-expiry option rows were asserted. Every run reached `PROCESSED`, with CE/PE rows and underlying-close reconciliation.
+- This used the retained GitHub Actions artifact, not B2 downloads. It does not prove that a persistent Render database contains those rows.
 
 ### Phase 4 specification — PR #8
 - PR: [#8](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/8)
@@ -94,6 +100,6 @@ No unapproved formula, threshold, weight, confidence score or model behavior may
 
 ## Current next step
 
-Phase 4 implementation is the next development phase, but its feature definitions and implementation choices are not yet approved. Before writing Phase 4 code, first verify that the required historical 1/5/22 EOD records are actually persisted and queryable: Phase 3 processing is session-oriented, so do not assume the full 22-session window is already present in PostgreSQL. If history is missing, define and approve a safe historical loading approach before implementing features.
+Phase 4 implementation is the next development phase, but its feature definitions and implementation choices are not yet approved. The PR #15 CI test proves that all 22 audited sessions can be processed and read back in an ephemeral PostgreSQL 16 database. It does not prove that the separate persistent Render database contains those rows; that database remains unverified because the hosted query connection is blocked by its empty IP allowlist. Before writing Phase 4 code, verify the required historical 1/5/22 records in the actual target database. If history is missing, define and approve a safe historical loading approach before implementing features.
 
 PR #9 remains a separate draft requirements document for Phases 5–6 and must not be treated as approved implementation scope.
