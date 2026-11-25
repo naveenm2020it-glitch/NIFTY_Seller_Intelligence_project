@@ -254,6 +254,26 @@ The following remain open and must not be treated as approved merely because the
 - Feature output schema, persistence format and idempotency key.
 - Backend-only output versus a read-only preview/API.
 
+### 10.5 Owner-approved CE/PE premium movement features
+
+The project owner approved the following two descriptive premium movement features for the Phase 4 catalogue:
+
+| Feature | Definition | Review status |
+|---|---|---|
+| Absolute premium change (₹) | Current EOD closing premium minus the immediately preceding validated trading-session EOD closing premium for the exact same contract | Approved |
+| Simple premium return (%) | (Current EOD closing premium / immediately preceding validated trading-session EOD closing premium - 1) × 100 | Approved |
+
+#### Calculation and continuity safeguards
+
+- Calculate both features independently for each exact contract identity: NIFTY underlying, selected expiry, strike, option type and instrument ID.
+- Use the immediately preceding validated trading-session observation for that same contract. If that adjacent session's contract observation is missing, mark the movement unavailable; do not bridge the gap or substitute another strike, expiry, option type or instrument.
+- Absolute premium change remains calculable when the previous premium is zero, provided both current and previous premium observations are valid.
+- Simple premium return is unavailable when the previous premium is missing or zero. Do not replace an unavailable return with zero.
+- A current premium of zero is a valid observed value and must be preserved.
+- Retain source premium observations unchanged and preserve trade-date, contract identity and source provenance.
+- These features describe premium movement only. They do not independently establish seller identity, fresh writing, unwinding, seller dominance or a trading signal.
+- Log premium return, symmetric percentage change and spot-normalized premium change are not approved Phase 4 features. They remain outside the approved catalogue unless separately reviewed.
+
 ### 10.4 Separate 17 + 4 + 1 rolling forecast-validation concept
 
 The owner approved the following high-level historical workflow concept:
