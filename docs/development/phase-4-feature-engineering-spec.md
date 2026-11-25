@@ -416,3 +416,39 @@ VWPR is the volume-weighted average of the daily simple premium returns in the s
 - Pearson correlation, Spearman correlation, premium-change-times-volume, log-volume relationships, turnover proxies and additional premium–volume indicators are not approved by this decision. They remain outside the Phase 4 catalogue unless separately reviewed.
 - VWPR is not defined for the 1-session context; retain the already-approved daily premium return and volume features separately for that context.
 
+### 10.10 Owner-approved CE/PE OI–premium relationship analysis
+
+The project owner approved Spearman Rank Correlation as the selected descriptive method for examining the relationship between daily percentage OI change and daily simple premium return for an exact CE/PE contract.
+
+**Selected relationship measure:**
+
+`Spearman ρ = SpearmanRankCorrelation(ΔOI%, R_p)`
+
+Where:
+- `ΔOI%` is the approved daily percentage OI change for the exact same contract: `(OI_t / OI_(t-1) - 1) × 100`.
+- `R_p` is the approved daily simple premium return in percentage points for the exact same contract: `(P_t / P_(t-1) - 1) × 100`.
+- Each OI-change value and premium-return value must refer to the same contract and the same trading-date observation.
+
+#### Window application
+
+- **1-session context:** Do not calculate a correlation coefficient. Retain the Analysis Date's daily percentage OI change and daily simple premium return as separate features, subject to their existing validity rules.
+- **5-session context:** Preserve the date-aligned valid OI-change/premium-return pairs and report their count and coverage. Do not calculate or publish a 5-session correlation coefficient; five observations are too few to support a useful relationship assessment.
+- **22-session context:** Spearman Rank Correlation is the selected relationship statistic. It may be calculated only when the separately approved minimum valid paired-observation requirement is met. That minimum is not defined by this approval and must be settled before implementation. Do not invent a minimum or silently treat all 22 dates as valid pairs.
+- Report expected dates, actual valid paired-observation count, first/last paired dates, coverage status and any missing-pair reasons alongside the statistic. If the 22-session context is incomplete but the approved minimum is met, identify the result as partial and disclose the actual pair count; never label it a complete 22-pair result.
+
+#### Pairing, continuity and calculation safeguards
+
+- Calculate independently for the exact contract identity: NIFTY underlying, selected expiry, strike, option type and instrument ID. Never combine CE and PE, different strikes or different expiries.
+- Pair `ΔOI%` and `R_p` by the same trading date and exact contract. Each daily value uses the immediately preceding validated trading-session observation for that same contract.
+- If the prior OI or prior closing premium is missing, if either current input is missing, or if either percentage-change denominator is zero, that date does not produce a valid pair. Do not bridge missing contract observations, substitute another contract or replace unavailable values with zero.
+- Preserve valid observed zero OI and zero premium values. The existing percentage-change rules still apply: percentage OI change is unavailable when prior OI is zero, and premium return is unavailable when prior closing premium is zero.
+- The prior-session OI and premium observations needed for the earliest date in the selected window are calculation dependencies only; they are not counted as observations in the N-session window.
+- If either variable has no variation across the valid paired observations, Spearman correlation is undefined and must be reported as unavailable with the reason. Handle tied ranks using a standard Spearman rank-correlation implementation; do not add custom tie-breaking rules.
+- Preserve the paired input values and their dates so the coefficient can be reproduced. Retain full calculation precision internally; presentation rounding remains an output-schema decision.
+
+#### Interpretation limits and exclusions
+
+- Spearman correlation describes the strength and direction of a monotonic association between daily percentage OI changes and daily premium returns in the observed exact-contract sample. It does not establish causation or predictive power.
+- A positive or negative coefficient does not identify buyers or sellers, prove fresh writing or unwinding, establish long/short buildup, demonstrate seller dominance or create a trading signal.
+- Do not define coefficient thresholds, labels, scoring weights or decision rules in Phase 4.
+- Pearson correlation, OI-change-times-premium-return, OI-weighted premium return, directional quadrant classification and other OI–premium relationship measures are not approved by this decision. They remain outside the Phase 4 catalogue unless separately reviewed.
