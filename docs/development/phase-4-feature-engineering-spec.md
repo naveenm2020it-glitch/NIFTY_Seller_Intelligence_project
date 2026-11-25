@@ -1,6 +1,6 @@
 # Phase 4 — Feature Engineering Specification (Review Draft)
 
-**Status:** Design decisions reviewed and owner-approved as recorded in Sections 3 and 10; physical database schema, migrations, exact API contract and implementation remain pending  
+**Status:** Feature formulas and logical output decisions are owner-approved; physical database and API designs are documented in `phase-4-physical-database-design.md` and `phase-4-api-contract.md`; migrations and implementation remain pending  
 **Scope:** NIFTY 50 and selected-expiry NIFTY CE/PE historical EOD data  
 **Depends on:** Phase 0–3 foundation and `docs/development/phase-3-data-contract.md`  
 **User inputs:** Analysis Date and selected Expiry only
@@ -161,7 +161,7 @@ Each feature result should be traceable to:
 
 A proposed feature-set summary should record the feature-definition version, input source hashes, number of index observations, number of option-contract observations, window coverage and validation summary.
 
-The logical feature-record contract and deterministic idempotency identity are approved in Section 10.11. The physical persistence design, database tables, migrations and exact read-only API request/response contract remain implementation-level decisions and must be reviewed before any schema or API change.
+The logical feature-record contract and deterministic idempotency identity are approved in Section 10.11. The physical persistence design is documented in `phase-4-physical-database-design.md`, and the processing/read-only API routes and payload contract are documented in `phase-4-api-contract.md`. Database migrations, application implementation and authentication/authorization integration remain pending and require review before code or schema changes.
 
 ## 7. Acceptance criteria for Phase 4
 
@@ -208,8 +208,8 @@ The following design decisions have been owner-approved and are detailed in Sect
 10. Missing contract observations invalidate only affected contract features/windows, not the entire Analysis Run.
 
 The following implementation/source-governance items remain open and are not authorized by these design decisions:
-- Physical database persistence design, table definitions and migrations.
-- Exact read-only API endpoints, payload schemas, permissions and integration details.
+- Database migrations and application implementation for the documented physical schema and API contract.
+- Authentication/authorization implementation and integration; the current inspected API routes do not expose a reusable authentication/authorization dependency.
 - Permitted source/data-use scope before any supplementary report or data source is introduced. Phase 4 remains restricted to validated Phase 3 records unless separately approved.
 
 Until implementation-level reviews are completed, this document remains a design specification. It does not authorize application-code changes, database schema changes, migrations, data mutation, report acquisition, deployment or production-configuration changes.
