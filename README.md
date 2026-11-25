@@ -17,6 +17,7 @@ React + Vite frontend; Python + FastAPI modular monolith; PostgreSQL; optional B
 ## Development status
 
 The canonical, current phase status and merge evidence are maintained in [docs/development/project-status.md](docs/development/project-status.md). For actual implementation status, use the repository's `main` branch; draft pull requests describe proposed work and do not count as completed phases.
+
 | Phase | Status | Source |
 |---|---|---|
 | Phase 0 — Foundation | Completed | docs/development/phase-0.md |
