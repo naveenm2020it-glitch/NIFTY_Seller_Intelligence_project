@@ -24,7 +24,7 @@ The canonical, current phase status and merge evidence are maintained in [docs/d
 | Phase 1 — Historical EOD Data Audit | Completed | docs/development/phase-1-closeout.md |
 | Phase 2 — User Configuration & Data Orchestration | Completed | docs/development/phase-2-closeout.md |
 | Phase 3 — Storage & Data Processing | Completed | docs/development/phase-3-closeout.md |
-| Phase 4 — Feature Engineering | Pending — specification under review | docs/development/phase-4-feature-engineering-spec.md |
+| Phase 4 — Feature Engineering | Pending — specification documented; implementation not started | docs/development/phase-4-feature-engineering-spec.md |
 | Phase 5 — Eight Analytical Engines | Pending — functional specification draft under review | PR #9 (draft) |
 | Phase 6 — Eight-Scenario Decision Engine | Pending — requirements included in PR #9 draft | PR #9 (draft) |
 | Phase 7 — Four ML Models | Pending | To be specified after feature/engine validation |
