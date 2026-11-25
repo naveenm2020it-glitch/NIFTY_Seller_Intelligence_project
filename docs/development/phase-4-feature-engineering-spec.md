@@ -320,3 +320,33 @@ The owner approved the following high-level historical workflow concept:
 This is a later-phase forecast-validation protocol, not a Phase 4 feature window or feature calculation. Phase 4 must not generate forecasts, scenarios, BUY CE/BUY PE/WAIT decisions, trading signals, trade simulations or P&L backtests. The 17 + 4 + 1 concept is recorded separately in `docs/development/17-4-1-walk-forward-validation-proposal.md` and must be implemented only in the appropriate later phase after its evaluation methodology is approved.
 
 Four sequential validation targets are useful for checking workflow correctness but are not enough to establish statistically reliable predictive accuracy. Any accuracy claim requires a substantially larger chronological evaluation sample, explicit target definitions and leakage-safe validation.
+
+### 10.7 Owner-approved CE/PE open-interest movement features
+
+The project owner approved the following two descriptive open-interest (OI) movement features for the Phase 4 CE/PE contract feature catalogue:
+
+| Feature | Definition | Review status |
+|---|---|---|
+| Absolute OI change | Current EOD OI minus the immediately preceding validated trading-session EOD OI for the exact same contract | Approved |
+| Percentage OI change (%) | (Current EOD OI / immediately preceding validated trading-session EOD OI - 1) × 100 | Approved |
+
+#### 1/5/22-session context and window summaries
+
+- **1-session context:** Report the Analysis Date's absolute OI change and percentage OI change against the immediately preceding validated trading-session observation for the exact same contract. That prior observation is a calculation dependency outside the 1-session window; it is not counted as a window observation.
+- **5- and 22-session contexts:** Report first and last OI, net OI change (last OI minus first OI) and net OI change percentage ((last OI / first OI - 1) × 100), where the exact contract has valid, continuous OI observations throughout the selected window.
+- The 5- and 22-session window summaries are first-to-last changes, not sums of daily OI changes or sums/averages of daily percentage changes.
+- If a contract OI observation is missing within a window, report the window-level OI change as unavailable; do not bridge the gap. Preserve the actual observation count and continuity/missing-session status.
+- Percentage OI change is unavailable when its reference OI is missing or zero. Do not replace an unavailable percentage with zero.
+
+#### Calculation and continuity safeguards
+
+- Calculate each feature separately for the exact contract identity: NIFTY underlying, selected expiry, strike, option type and instrument ID.
+- Use the immediately preceding validated trading-session OI observation for daily changes. If that adjacent session's observation is missing, mark the daily change unavailable; do not bridge the gap or substitute another contract.
+- A valid OI value of zero must be preserved as an observed value, not treated as missing.
+- Absolute OI change remains calculable when the previous OI is zero, provided both current and previous OI observations are valid.
+- Percentage OI change is unavailable when the previous OI is zero or missing. Do not emit infinity, substitute zero or use another denominator.
+- For 5- and 22-session net changes, both endpoints and all intervening expected contract observations must be valid for the exact same contract. A missing observation makes that window-level summary unavailable.
+- Retain source OI observations unchanged and preserve trade-date, contract identity and source provenance.
+- OI change describes the change in outstanding open contracts only. It does not independently establish buyer/seller identity, fresh writing, unwinding, long buildup, short buildup, seller dominance or a trading signal.
+- Logarithmic OI change and symmetric percentage OI change are not approved Phase 4 features. They remain outside the approved catalogue unless separately reviewed.
+
