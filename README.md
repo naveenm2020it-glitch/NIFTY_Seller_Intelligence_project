@@ -15,6 +15,8 @@ A historical, end-of-day (EOD) NIFTY options analysis application built around t
 React + Vite frontend; Python + FastAPI modular monolith; PostgreSQL; optional Backblaze B2 S3-compatible storage; Pandas + NumPy; Scikit-learn; Pytest.
 
 ## Development status
+
+The canonical, current phase status and merge evidence are maintained in [docs/development/project-status.md](docs/development/project-status.md). For actual implementation status, use the repository's `main` branch; draft pull requests describe proposed work and do not count as completed phases.
 | Phase | Status | Source |
 |---|---|---|
 | Phase 0 — Foundation | Completed | docs/development/phase-0.md |
@@ -23,7 +25,7 @@ React + Vite frontend; Python + FastAPI modular monolith; PostgreSQL; optional B
 | Phase 3 — Storage & Data Processing | Completed | docs/development/phase-3-closeout.md |
 | Phase 4 — Feature Engineering | Pending — specification under review | docs/development/phase-4-feature-engineering-spec.md |
 | Phase 5 — Eight Analytical Engines | Pending — functional specification draft under review | PR #9 (draft) |
-| Phase 6 — Eight-Scenario Decision Engine | Pending — requirements included in PR #7 draft | PR #9 (draft) |
+| Phase 6 — Eight-Scenario Decision Engine | Pending — requirements included in PR #9 draft | PR #9 (draft) |
 | Phase 7 — Four ML Models | Pending | To be specified after feature/engine validation |
 | Phase 8 — Complete Web Dashboard | Pending | To be specified |
 | Phase 9 — QA & Production Readiness | Pending | To be specified |
@@ -38,7 +40,7 @@ The API and frontend provide analysis-date selection, automatic nearest availabl
 Phase 3 adds manifest-verified, read-only parsing of the three audited core reports; NIFTY 50 and selected-expiry NIFTY CE/PE normalization; contract reconciliation; validation; PostgreSQL persistence; processing/status/read APIs; provenance; idempotency; source-conflict detection and retryable failures. Standard backend/synthetic archive tests, PostgreSQL migration upgrade/downgrade/re-upgrade tests and frontend build passed. The real B2 archive integration was skipped because of the account's AccessDenied/Class B transaction cap; it is not claimed as passed. See the Phase 3 closeout and data contract.
 
 ## Phase 4 boundary
-Phase 4 is Feature Engineering (1/5/22-session descriptive features). Its specification is a review draft; formulas, window semantics, feature schema and persistence/API choices require approval before implementation. The separate eight-engine/eight-scenario document describes proposed requirements for later Phases 5–6, not Phase 4 implementation.
+Phase 4 is Feature Engineering (1/5/22-session descriptive features). The convention for counting 1/5/22 EOD records, including the Analysis Date, is approved. The feature catalogue, formulas, feature schema and persistence/API choices remain under review and require approval before implementation. The separate eight-engine/eight-scenario document describes proposed requirements for later Phases 5–6, not Phase 4 implementation.
 
 ## Security and operations
 Keep credentials in an untracked .env or secret store. Never commit credentials or raw market archives. B2 remains optional; Phase 3 does not claim automatic application-side B2 archive materialization. The application still requires an extracted local archive. Automatic NSE collection is not implemented. No production deployment is authorized.
