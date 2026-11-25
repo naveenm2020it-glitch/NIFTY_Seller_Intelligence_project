@@ -150,6 +150,7 @@ jobs:
           run-id: 44858251380
           artifact-ids: 14688805993
           path: ${{ github.workspace }}/local_data/artifacts
+          merge-multiple: true
       - name: Verify all Phase 1 raw files and audit evidence
         run: |
           cd "$GITHUB_WORKSPACE"
