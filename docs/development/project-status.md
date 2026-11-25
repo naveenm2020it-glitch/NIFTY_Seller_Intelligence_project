@@ -18,7 +18,7 @@ Update this file whenever a phase is completed, a pull request is merged, or a p
 | 1 | Historical EOD Data Audit | **Completed and integrated** | [Phase 1 closeout](phase-1-closeout.md); integrated with Phase 2 through PR [#5](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/5), merge commit `82fcb219748e35ef22ab9fb51d71fd111b2d32de`. |
 | 2 | User Configuration & Data Orchestration | **Completed and integrated** | [Phase 2 closeout](phase-2-closeout.md); PR [#5](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/5), merge commit `82fcb219748e35ef22ab9fb51d71fd111b2d32de`. |
 | 3 | Storage & Data Processing | **Completed and integrated** | [Phase 3 closeout](phase-3-closeout.md); PR [#6](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/6), merge commit `8abbc8d125507d13ec42dde5ffec3ad81f3cbc18`. |
-| 4 | Feature Engineering | **Pending implementation; specification under review** | [Phase 4 specification](phase-4-feature-engineering-spec.md). PR [#8](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/8) contains documentation only. |
+| 4 | Feature Engineering | **Pending implementation; specification documented, feature decisions still open** | [Phase 4 specification](phase-4-feature-engineering-spec.md). PR [#8](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/8) contains documentation only. |
 | 5 | Eight Analytical Engines | **Pending** | Requirements draft in PR [#9](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/9); not approved or implemented. |
 | 6 | Eight-Scenario Decision Engine | **Pending** | Requirements draft in PR [#9](https://github.com/naveenm2020it-glitch/NIFTY_Seller_Intelligence_project/pull/9); not approved or implemented. |
 | 7 | Four ML Models | **Pending** | Requires validated upstream features and approved model requirements. |
@@ -87,6 +87,6 @@ No unapproved formula, threshold, weight, confidence score or model behavior may
 
 ## Current next step
 
-Complete review and integration of PR #8's documentation-only README/Phase 4 specification updates. This does **not** approve Phase 4 implementation. Before writing Phase 4 code, first verify that the required historical 1/5/22 EOD records are actually persisted and queryable: Phase 3 processing is session-oriented, so do not assume the full 22-session window is already present in PostgreSQL. If history is missing, define and approve a safe historical loading approach before implementing features.
+Phase 4 implementation is the next development phase, but its feature definitions and implementation choices are not yet approved. Before writing Phase 4 code, first verify that the required historical 1/5/22 EOD records are actually persisted and queryable: Phase 3 processing is session-oriented, so do not assume the full 22-session window is already present in PostgreSQL. If history is missing, define and approve a safe historical loading approach before implementing features.
 
 PR #9 remains a separate draft requirements document for Phases 5–6 and must not be treated as approved implementation scope.
