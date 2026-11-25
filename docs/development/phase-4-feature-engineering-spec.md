@@ -243,7 +243,7 @@ The following NIFTY spot features were approved during the project-owner review 
 - Simple return and percentage features are unavailable when their denominator is missing or zero. Store log return as the decimal value ln(Current close / previous close); convert to percentage form by multiplying by 100 only at the presentation boundary. Log return is unavailable unless both closes are valid and positive.
 - Candle body ratio and CLV are unavailable when High equals Low. Do not replace unavailable results with zero.
 - Calculate Williams %R separately for each observation using only that observation and its preceding available validated trading-session records within the specified 5- or 22-session lookback. Never use later observations from the Analysis Date window to calculate an earlier row. Williams %R is unavailable until the required lookback is available or when its highest high equals its lowest low. Do not invent thresholds or overbought/oversold labels.
-- Retain full calculation precision internally. Store log returns as decimal values; percentage display is a presentation conversion (× 100), not a separate underlying calculation. Output rounding and display precision remain an output-schema decision.
+- Retain full calculation precision internally. Store log returns as decimal values; percentage display is a presentation conversion (× 100), not a separate underlying calculation. Output rounding follows the feature-specific presentation rule approved in Section 10.11; it does not alter stored calculation values.
 - Calculate rolling indicators such as Williams %R independently at each historical observation using only data available up to that observation, preventing look-ahead leakage.
 - Keep original OHLC values unchanged and retain provenance for every derived value.
 
@@ -464,7 +464,7 @@ VWPR is the volume-weighted average of the daily simple premium returns in the s
 - VWPR is available only when all N daily premium returns and their corresponding EOD volume observations are valid and the sum of volume across the window is greater than zero. If any required return or volume observation is missing, or if total volume is zero, mark VWPR unavailable; do not silently calculate a complete-window result from a reduced subset.
 - A valid zero-volume observation remains part of the window and its daily return must be valid, but it contributes zero weight to the numerator and denominator. Missing volume is not zero.
 - Preserve the daily premium returns and volume observations used in the calculation, along with expected and actual observation counts, first/last dates and calculation status.
-- Use full calculation precision internally. Presentation rounding remains an output-schema decision.
+- Use full calculation precision internally. Presentation rounding follows the feature-specific rule in Section 10.11 and does not alter stored calculation values.
 
 #### Interpretation limits
 
