@@ -7,7 +7,6 @@ on:
       - phase-1-data-audit
       - phase-2-user-config-orchestration
       - phase-3-storage-data-processing
-      - phase3-real-archive-verification
       - main
   pull_request:
     branches:
@@ -18,7 +17,6 @@ on:
 
 permissions:
   contents: read
-  actions: read
 
 jobs:
   backend:
@@ -106,54 +104,3 @@ jobs:
           mv "$GITHUB_WORKSPACE/local_data/raw" "$GITHUB_WORKSPACE/local_data/artifacts/raw"
       - run: alembic upgrade head
       - run: python -m pytest -q
-
-  phase3-real-archive:
-    name: Phase 3 real 22-session archive and PostgreSQL integration
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/phase3-real-archive-verification' }}
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: nifty_seller_intelligence
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d nifty_seller_intelligence"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    defaults:
-      run:
-        working-directory: backend
-    env:
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/nifty_seller_intelligence
-      DATA_STORAGE_PATH: ${{ github.workspace }}/local_data
-      PHASE3_REAL_ARCHIVE_SMOKE: "1"
-      PHASE1_ARTIFACT_DIR: ${{ github.workspace }}/local_data/artifacts
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: backend/requirements.txt
-      - run: python -m pip install -r requirements.txt
-      - run: python -m pip install boto3
-      - name: Download immutable Phase 1 audit artifact from GitHub Actions
-        uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          run-id: 44858251380
-          artifact-ids: 14688805993
-          path: ${{ github.workspace }}/local_data/artifacts
-          merge-multiple: true
-      - name: Verify all Phase 1 raw files and audit evidence
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          python -c "from tools.upload_phase1_archive_to_b2 import verify_source_artifact; verify_source_artifact()"
-      - run: alembic upgrade head
-      - run: python -m pytest -q tests/test_phase3_real_archive_smoke.py
