@@ -1,6 +1,6 @@
 # Phase 4 — Feature Engineering Specification (Review Draft)
 
-**Status:** Draft for project-owner review; session-window convention approved; other feature and implementation decisions remain open  
+**Status:** Review draft; session-window convention and the NIFTY spot formula decisions listed in Section 10 have been owner-approved; remaining definitions and implementation decisions remain open  
 **Scope:** NIFTY 50 and selected-expiry NIFTY CE/PE historical EOD data  
 **Depends on:** Phase 0–3 foundation and `docs/development/phase-3-data-contract.md`  
 **User inputs:** Analysis Date and selected Expiry only
@@ -206,3 +206,61 @@ Phase 4 implementation is complete only when all of the following are demonstrat
 8. Confirm permitted source/data-use scope before any supplementary report is added.
 
 Until these decisions are approved, this document is a design draft only. No code, schema, migration, data, report acquisition, deployment or production configuration is changed by this specification.
+
+
+## 10. Owner-reviewed NIFTY spot formula decisions
+
+The following NIFTY spot features were approved during the project-owner review on 2026-11-25. These approvals authorize their inclusion in the Phase 4 feature catalogue; they do not authorize prediction, signal generation, scoring or trading decisions.
+
+| Feature | Definition | Review status |
+|---|---|---|
+| Close-to-close point change | Current close minus immediately preceding available validated trading-session close | Approved |
+| Simple close-to-close return | (Current close / previous close - 1) × 100 | Approved |
+| Log close-to-close return | ln(Current close / previous close) × 100 | Approved |
+| Intraday range | High - Low | Approved |
+| Intraday range percentage | (High - Low) / previous close × 100 | Approved |
+| Candle body points | Close - Open | Approved |
+| Candle body percentage | (Close - Open) / Open × 100 | Approved |
+| Candle body ratio | (Close - Open) / (High - Low) | Approved |
+| Opening gap points | Open - previous close | Approved |
+| Opening gap percentage | (Open - previous close) / previous close × 100 | Approved |
+| Daily Close Location Value (CLV) | ((Close - Low) - (High - Close)) / (High - Low) | Approved |
+| Williams %R (5) | -100 × (highest high over 5 sessions - current close) / (highest high - lowest low over 5 sessions) | Approved |
+| Williams %R (22) | Same definition over 22 sessions | Approved |
+
+### 10.1 Window application and calculation safeguards
+
+- Approved daily features are calculated for the available EOD observations represented by the 1-, 5- and 22-session contexts, subject to each feature's required prior observation and denominator.
+- The N-session context remains N available validated EOD observations including the Analysis Date. It is not N return intervals.
+- Close-to-close change, simple return, log return and opening gap require the immediately preceding available validated trading-session close. If it is missing, the affected result is unavailable. A required prior close outside the N-session window is a dependency only and is not counted in that window.
+- Simple return and percentage features are unavailable when their denominator is missing or zero. Log return is unavailable unless both closes are valid and positive.
+- Candle body ratio and CLV are unavailable when High equals Low. Do not replace unavailable results with zero.
+- Williams %R is unavailable when the relevant lookback does not contain a valid high/low range or its highest high equals its lowest low. Do not invent thresholds or overbought/oversold labels.
+- Retain full calculation precision internally. Output rounding and display precision remain an output-schema decision.
+- Keep original OHLC values unchanged and retain provenance for every derived value.
+
+### 10.2 Yang–Zhang volatility decision
+
+The owner selected Yang–Zhang as the preferred advanced volatility estimator in addition to the approved basic range features. The design is approved only as a candidate for 5- and 22-session contexts; it is unavailable for a 1-session context. It is **not ready for implementation** until the exact estimator convention, minimum valid observations, annualization convention, missing-session treatment and output precision are separately approved. No Yang–Zhang value may be emitted before those rules are finalized.
+
+### 10.3 Decisions still open within the feature catalogue
+
+The following remain open and must not be treated as approved merely because the spot formulas above were approved:
+- The full CE/PE contract feature catalogue and exact continuity key.
+- Spot-to-strike distance formula and units, and any ITM/ATM/OTM classification.
+- Window-summary denominator and aggregation conventions where not explicitly defined above.
+- Yang–Zhang estimator parameters and validity rules.
+- Feature output schema, persistence format and idempotency key.
+- Backend-only output versus a read-only preview/API.
+
+### 10.4 Separate 17 + 4 + 1 rolling forecast-validation concept
+
+The owner approved the following high-level historical workflow concept:
+
+- Sessions 1–17: establish the initial cumulative historical baseline.
+- Sessions 18–21: perform four sequential one-session-ahead forecast checks. For each target session, use only EOD information available before that target, then compare the forecast with that session's actual EOD outcome after the forecast is recorded.
+- Session 22: produce the final one-session-ahead assessment using only Sessions 1–21. Session 22 actual EOD data must not be used as an input to its own forecast; it may be used only for later evaluation after the forecast is fixed.
+
+This is a later-phase forecast-validation protocol, not a Phase 4 feature window or feature calculation. Phase 4 must not generate forecasts, scenarios, BUY CE/BUY PE/WAIT decisions, trading signals, trade simulations or P&L backtests. The 17 + 4 + 1 concept is recorded separately in `docs/development/17-4-1-walk-forward-validation-proposal.md` and must be implemented only in the appropriate later phase after its evaluation methodology is approved.
+
+Four sequential validation targets are useful for checking workflow correctness but are not enough to establish statistically reliable predictive accuracy. Any accuracy claim requires a substantially larger chronological evaluation sample, explicit target definitions and leakage-safe validation.
