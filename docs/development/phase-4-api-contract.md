@@ -54,9 +54,9 @@ Read the NIFTY 50 EOD bars for the selected context dates. Preserve each source 
 
 ### 3.4 Source lineage and immutable inputs
 
-The feature-set input manifest must cover every Phase 3 source row actually used by the feature calculations across all selected dates, not merely the current Analysis Run's one-day ingestion batch. It must include the relevant index and option source hashes and stable row identifiers/provenance.
+The feature-set input manifest must cover every Phase 3 source row actually used by the feature calculations across all selected dates, not merely the current Analysis Run's one-day ingestion batch. It must include the relevant index and option source hashes and stable row identifiers/provenance. In the inspected Phase 3 schema, the NIFTY 50 row is identified by `trade_date`; an option row has its persisted `id`, `trade_date`, `instrument_id` and `ingestion_batch_id`.
 
-Compute a canonical input-manifest hash from the sorted, deterministic source references. Persist both the manifest and its hash in `feature_sets`. Reprocessing the same Analysis Run and feature-definition version with a different historical input manifest must fail with a conflict; do not silently rewrite the inputs behind an existing result. A corrected or expanded source history must be represented by a new Analysis Run under the existing Phase 3 source-governance rules.
+Compute a canonical input-manifest hash from the sorted, deterministic source references. Persist the complete manifest in `feature_sets.input_source_manifest` and its SHA-256 in `feature_sets.input_manifest_hash`. Reprocessing the same Analysis Run and feature-definition version with a different historical input manifest must fail with a conflict; do not silently rewrite it behind an existing result. A corrected or expanded source history must be represented by a new Analysis Run under the existing Phase 3 source-governance rules.
 
 ## 4. Processing command
 
@@ -84,7 +84,7 @@ The caller does not choose Analysis Date, Expiry, feature-definition version, wi
 10. Calculate features using the approved deterministic definitions and persist individual records using the unique feature-record identity.
 11. Mark the feature set `COMPLETED` only after all expected feature records have been persisted successfully.
 
-The first implementation should execute this command synchronously in the API request using a single controlled database transaction for feature-set/record persistence. This avoids introducing an unconfigured queue or an in-process background task that could be lost on restart. If real workload or request timeouts later demonstrate the need, introduce a durable worker/queue as a separately reviewed infrastructure change; do not pretend FastAPI in-process background tasks are durable.
+The first implementation should execute this command synchronously in the API request without introducing an unconfigured queue or an in-process background task that could be lost on restart. Use one outer database transaction for the feature-set lifecycle and a savepoint for the complete feature-record write set. On success, commit the feature records and `COMPLETED` state together. If calculation or persistence fails, roll back the savepoint so no partial feature records remain, then persist `FAILED` and a safe error reason in the outer transaction. A source-manifest mismatch is a conflict and must not alter an existing feature set. If real workload or request timeouts later demonstrate the need, introduce a durable worker/queue as a separately reviewed infrastructure change; do not pretend FastAPI in-process background tasks are durable.
 
 A completed feature set may contain individual `PARTIAL` or `UNAVAILABLE` records. Those are valid feature outcomes and do not make the whole feature set fail. Mark the feature set `FAILED` only for a processing-level failure that prevents a consistent complete feature-record write.
 
@@ -280,4 +280,4 @@ No route, model, migration, calculation code, authentication code, database data
 
 ## 9. Open implementation verification
 
-Before coding, verify the project's supported PostgreSQL version, test-database behavior, and the exact source-row identity strategy for provenance. Confirm whether existing deployment clients require a particular API versioning or authentication scheme. These checks must not be replaced by invented configuration values.
+Before coding, verify the project's supported PostgreSQL version, test-database behavior, and the exact source-row identity strategy for provenance. Confirm whether existing deployment clients require a particular API versioning or authentication scheme. Resolve the blocking feature-record grain question: the specification describes daily feature calculations for each historical EOD observation, while the current logical identity and proposed unique key store only one value per feature/subject/context. The API response currently has no `observation_date` field. Do not add a column or change the approved logical identity without resolving this with the project owner. These checks must not be replaced by invented configuration values.
