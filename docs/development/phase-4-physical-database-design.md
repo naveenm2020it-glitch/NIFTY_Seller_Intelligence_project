@@ -34,14 +34,15 @@ A feature set is unique for an existing Analysis Run and one immutable feature-d
 
 ## 3. Table: feature_sets
 
-One row represents one attempt/result set for an Analysis Run under a particular feature-definition version.
+One row represents the logical feature-set lifecycle for an Analysis Run under a particular feature-definition version. Retries reuse this row; separate per-attempt history is not stored in this table.
 
 | Column | Suggested PostgreSQL type | Null | Purpose |
 |---|---|---:|---|
 | id | VARCHAR(36) | No | UUID primary key |
 | analysis_run_id | VARCHAR(36) | No | FK to `analysis_runs.id`, ON DELETE RESTRICT |
 | feature_definition_version | VARCHAR(64) | No | Immutable feature catalogue/formula version |
-| input_source_hashes | JSON | No | Canonical list/manifest of Phase 3 source hashes used |
+| input_source_manifest | JSON | No | Canonical manifest of every Phase 3 source row used, including source hash and stable row reference |
+| input_manifest_hash | VARCHAR(64) | No | SHA-256 of the canonical, deterministically sorted input-source manifest |
 | index_observation_count | INTEGER | No | Number of NIFTY spot observations considered |
 | option_observation_count | INTEGER | No | Number of option-contract observations considered |
 | window_coverage | JSON | No | Expected/actual coverage for 1-, 5- and 22-session contexts |
@@ -140,11 +141,11 @@ Together, these constraints represent the approved identity: Analysis Run, featu
 Processing rules:
 
 1. Create or retrieve the feature set using `(analysis_run_id, feature_definition_version)`.
-2. Before reusing an existing feature set, verify that its canonical input source-hash manifest matches the current Phase 3 inputs. A mismatch must fail with an explicit integrity/conflict error; do not silently replace the input manifest under the same Analysis Run and feature version.
+2. Before reusing an existing feature set, compare its `input_manifest_hash` with the SHA-256 of the current canonical `input_source_manifest`. A mismatch must fail with an explicit integrity/conflict error; do not silently replace either field under the same Analysis Run and feature version.
 3. Upsert each feature record using its unique identity.
 4. Reprocessing the same inputs and definition version updates the same logical rows; it must not create duplicates.
 5. A changed formula/catalogue requires a new feature-definition version and therefore a separate feature set. Do not overwrite or delete earlier-version results.
-6. Write a feature-set processing attempt transactionally so a failed write does not leave a misleading COMPLETED feature set.
+6. Keep feature-set lifecycle state and feature-record writes consistent. Use an outer transaction for the feature-set row/status and a database savepoint for the complete feature-record write set. On success, release the savepoint and mark the feature set `COMPLETED` in the outer transaction. On a calculation or persistence failure, roll back the savepoint (removing all feature-record writes from that attempt), set the feature set to `FAILED` with a safe error reason in the outer transaction, and commit the failure state. This preserves the failed feature-set record without leaving partial feature records or a misleading `COMPLETED` status.
 
 The feature-definition version is immutable. A change to formulas, parameters that alter semantics, feature identity, or output interpretation requires a version increment.
 
@@ -182,7 +183,8 @@ The following are implementation details to verify against the repository's actu
 - PostgreSQL server version and the SQLAlchemy/Alembic versions in the project lock/dependency files.
 - Whether the project's SQLite test setup supports all selected constraints and type variants.
 - UUID storage convention. This design uses the existing repository convention of `VARCHAR(36)`.
-- Whether source-hash manifests need a normalized child table later. JSON is sufficient for the current immutable audit manifest; queryable per-file lineage can be normalized if a later requirement needs it.
+- Whether source-hash manifests need a normalized child table later. The current design stores the complete immutable row-level manifest in JSON and its canonical SHA-256 in a separate typed column; queryable per-file lineage can be normalized if a later requirement needs it.
+- **Blocking feature-grain decision:** the Phase 4 specification describes daily features calculated for each historical EOD observation, but the approved logical identity and current unique key allow only one row per feature/subject/context window. Decide whether daily historical observations need an `observation_date` column included in feature-record identity, or whether only the Analysis Date's daily feature value is persisted and historical observations are calculation inputs. Do not finalize the feature-record migration until this is resolved.
 - Whether feature calculations need additional typed value kinds beyond numeric and categorical text. Add a typed column only when an approved feature requires it; do not put arbitrary result payloads into JSON.
 
 ## 10. Explicit non-goals
