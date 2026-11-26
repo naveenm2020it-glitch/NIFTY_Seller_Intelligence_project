@@ -89,3 +89,5 @@ Phase 1 acquisition/audit is complete only when:
 ## Current status
 
 **Specification only — not executed.** No 22-session bulk download, checksum manifest, or consolidated audit is claimed by this document. Automated acquisition remains disabled unless and until the proposed automated method is expressly authorized. Current planned acquisition is manual download and secure transfer, subject to applicable data-use permission.
+
+**Existing sample evidence:** The separate [19-Nov-2026 sample validation report](phase-1-sample-validation-2026-11-19.md) records the existing one-session Bhavcopy + MII cross-check. It is partial: the NIFTY 50 OHLC CSV was not present in the inspected sample, so the three-source sample run is still pending.
