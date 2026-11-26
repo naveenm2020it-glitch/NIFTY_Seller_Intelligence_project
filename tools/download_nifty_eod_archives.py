@@ -7,7 +7,8 @@ are explicitly labelled with their source master date; no synthetic rows are cre
 from __future__ import annotations
 import csv, gzip, hashlib, io, json, os, time, zipfile
 from collections import defaultdict
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
 from pathlib import Path
 import requests
 
@@ -87,6 +88,25 @@ def csv_from_gzip(path: Path):
     raw = gzip.decompress(path.read_bytes()).decode("utf-8-sig")
     return list(csv.DictReader(io.StringIO(raw)))
 
+def mii_expiry_date(raw_value: str) -> str:
+    # NSE MII expiry is seconds since 1980-01-01 UTC, not Unix epoch.
+    seconds = int(Decimal(raw_value))
+    return (datetime(1980,1,1,tzinfo=timezone.utc) + timedelta(seconds=seconds)).date().isoformat()
+
+def mii_strike(raw_value: str) -> Decimal:
+    # NSE MII strike is stored in 1/100 units.
+    return Decimal(raw_value) / Decimal("100")
+
+def identity_checks(bhav_row, master_row):
+    return {
+        "symbol": bhav_row.get("TckrSymb","").strip().upper() == master_row.get("TckrSymb","").strip().upper(),
+        "option_type": bhav_row.get("OptnTp","").strip().upper() == master_row.get("OptnTp","").strip().upper(),
+        "expiry": bhav_row.get("XpryDt","").strip() == mii_expiry_date(master_row.get("XpryDt","")),
+        "strike": Decimal(bhav_row.get("StrkPric","0")) == mii_strike(master_row.get("StrkPric","0")),
+        "contract_name": bhav_row.get("FinInstrmNm","").strip().upper() == master_row.get("StockNm","").strip().upper(),
+        "mii_product_type": master_row.get("FinInstrmNm","").strip().upper() == "OPTIDX",
+    }
+
 def is_nifty_option(row):
     return (row.get("TckrSymb","").strip().upper() == "NIFTY"
             and row.get("FinInstrmTp","").strip().upper() == "IDO"
@@ -119,7 +139,7 @@ for day in DATES:
     nifty_rows = [r for r in all_bhav_rows if is_nifty_option(r)]
     mii_nifty = [r for r in mii_rows
                  if r.get("TckrSymb","").strip().upper()=="NIFTY"
-                 and r.get("FinInstrmTp","").strip().upper()=="OPTIDX"
+                 and r.get("FinInstrmNm","").strip().upper()=="OPTIDX"
                  and r.get("OptnTp","").strip().upper() in {"CE","PE"}]
     mii_map = {r["FinInstrmId"]:r for r in mii_nifty if r.get("FinInstrmId")}
     if len(mii_map) != len([r for r in mii_nifty if r.get("FinInstrmId")]):
@@ -160,19 +180,24 @@ for day in DATES:
                                               item[0]))
             master_day, master_row = choices[0]
             match_type = "cross_session_master_match"
+        checks = identity_checks(row, master_row) if master_row else {}
         reconciliation.append({
             "session_date":day,"FinInstrmId":instrument_id,"FinInstrmNm":row.get("FinInstrmNm",""),
             "expiry_date":row.get("XpryDt",""),"strike":row.get("StrkPric",""),
             "option_type":row.get("OptnTp",""),"bhavcopy_underlying":row.get("TckrSymb",""),
             "master_match_type":match_type,"master_source_date":master_day,
             "master_symbol":master_row.get("TckrSymb","") if master_row else "",
-            "master_expiry_raw":master_row.get("XpryDt","") if master_row else "",
-            "master_strike_raw":master_row.get("StrkPric","") if master_row else "",
+            "master_contract_name":master_row.get("StockNm","") if master_row else "",
+            "master_expiry_date":mii_expiry_date(master_row.get("XpryDt","")) if master_row else "",
+            "master_strike_normalized":str(mii_strike(master_row.get("StrkPric","0"))) if master_row else "",
             "master_option_type":master_row.get("OptnTp","") if master_row else "",
+            "identity_checks":json.dumps(checks,sort_keys=True),
+            "identity_match":bool(checks) and all(checks.values()),
         })
 
 # 4. Enforce invariants before calling this a reconciled audit.
 unmatched = [r for r in reconciliation if r["master_match_type"]=="unmatched_all_22_masters"]
+identity_mismatches = [r for r in reconciliation if r["master_match_type"]!="unmatched_all_22_masters" and not r["identity_match"]]
 duplicate_sessions = [x for x in session_stats if x["duplicate_bhavcopy_instrument_ids"]]
 total_options = sum(x["nifty_option_rows"] for x in session_stats)
 total_ce = sum(x["nifty_ce_rows"] for x in session_stats)
@@ -189,9 +214,10 @@ summary = {
     "total_nifty_option_rows":total_options,"total_ce_rows":total_ce,"total_pe_rows":total_pe,
     "total_zero_volume_rows":total_zero,"same_day_master_matches":same,
     "cross_session_master_matches":cross,"unmatched_across_all_22_masters":len(unmatched),
+    "identity_mismatches":len(identity_mismatches),
     "unique_nifty_instrument_ids_across_master_union":len(master_union),
     "duplicate_bhavcopy_ids_by_session":duplicate_sessions,
-    "audit_status":"PASS" if len(DATES)==22 and len(manifest)==22 and not unmatched and not duplicate_sessions and total_ce+total_pe==total_options else "REVIEW_REQUIRED",
+    "audit_status":"PASS" if len(DATES)==22 and len(manifest)==22 and not unmatched and not identity_mismatches and not duplicate_sessions and total_ce+total_pe==total_options else "REVIEW_REQUIRED",
     "limitations":[
         "A cross-session MII match validates contract identity only; it does not replace the original session's MII snapshot.",
         "The MII master is a contract reference file, not historical option-chain OI or premium data.",
