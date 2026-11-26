@@ -38,7 +38,7 @@ jobs:
         run: python -m pip install --disable-pip-version-check requests
       - name: Download official NSE archives and audit NIFTY rows
         env:
-          INCLUDE_MUHURAT: ${{ inputs.include_muhurat }}
+          INCLUDE_MUHURAT: ${{ inputs.include_muhurat || 'auto' }}
         run: python tools/download_nifty_eod_archives.py
       - name: Upload source archives, manifest and audit
         uses: actions/upload-artifact@v4
