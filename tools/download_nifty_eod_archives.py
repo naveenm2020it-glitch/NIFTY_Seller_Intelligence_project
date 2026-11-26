@@ -29,7 +29,7 @@ REGULAR_DATES = [
  "2026-11-04","2026-11-05","2026-11-06","2026-11-09","2026-11-11",
  "2026-11-12","2026-11-13","2026-11-16","2026-11-17","2026-11-18","2026-11-19"
 ]
-INCLUDE_MUHURAT = os.getenv("INCLUDE_MUHURAT", "auto").lower()
+INCLUDE_MUHURAT = os.getenv("INCLUDE_MUHURAT", "auto").lower() or "auto"
 DATES = (["2026-11-08"] + REGULAR_DATES) if INCLUDE_MUHURAT in {"auto","yes","true","1"} else REGULAR_DATES
 if len(DATES) != len(set(DATES)):
     raise RuntimeError("Duplicate dates in acquisition plan")
